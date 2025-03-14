@@ -1,3 +1,5 @@
+import 'package:fertilizer_calculator/presentation/auth/pages/login_page.dart';
+import 'package:fertilizer_calculator/presentation/auth/widgets/custom_back_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_texfield.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +74,15 @@ class _SignupPageState extends State<SignupPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(height: width > 600 ? 50 : 20), // Spasi dinamis
+                    // const SizedBox(height: 10), // Memberikan jarak atas;
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: CustomBackButton(
+                        context: context,
+                        destination: const LoginPage(),
+                      ),
+                    ),
+                    // SizedBox(height: width > 600 ? 50 : 20), // Spasi dinamis
                     Image.asset("assets/images/logo.png",
                         width: 150, height: 150),
                     const SizedBox(height: 5),

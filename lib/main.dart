@@ -104,12 +104,14 @@ class MyApp extends StatelessWidget {
               ),
               //this font we will use later 'S'
               bodySmall: GoogleFonts.poppins(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
+                color: AppColors.SecondaryText,
+                letterSpacing: 0.5,
               ),
               //thus we have added all the fonts used in the projct ..
             ),
-            scaffoldBackgroundColor: AppColors.light,
+            scaffoldBackgroundColor: Colors.white,
             appBarTheme: const AppBarTheme(
               backgroundColor: AppColors.light,
               iconTheme: IconThemeData(

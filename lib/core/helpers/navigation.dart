@@ -35,6 +35,25 @@ class NavigatorHelper {
     );
   }
 
+  static void slideFrom(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        transitionDuration: Duration(milliseconds: 350),
+        pageBuilder: (context, animation, secondaryAnimation) => page,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(-1.0, 0.0), // Geser dari kiri ke kanan
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
   // Scale Transition (Zoom In)
   static void scaleTo(BuildContext context, Widget page) {
     Navigator.push(
