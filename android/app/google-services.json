@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "245587460934",
+    "project_id": "cerdastani-2336b",
+    "storage_bucket": "cerdastani-2336b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:245587460934:android:3fcfc665aec1e9ead21b47",
+        "android_client_info": {
+          "package_name": "com.example.flutter_firebase_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMXqSMehN_eqWDxBpJ7JvLKtuVlnOGMvk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:245587460934:android:017c48f67914dbebd21b47",
+        "android_client_info": {
+          "package_name": "com.fertilizer.calculator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMXqSMehN_eqWDxBpJ7JvLKtuVlnOGMvk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

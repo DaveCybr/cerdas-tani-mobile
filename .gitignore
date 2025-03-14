@@ -1,0 +1,53 @@
+# Dart & Flutter related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+android/app/debug.keystore
+
+# iOS specific
+ios/Flutter/Flutter.podspec
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Generated.xcconfig
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/.dart_tool/
+ios/.pwned/
+ios/.generated/
+ios/DerivedData/
+
+# Android specific
+android/.gradle/
+android/app/.cxx/
+android/local.properties
+android/key.properties
+android/app/build/
+android/gradlew
+android/gradlew.bat
+
+# IDE & Editor related
+.vscode/
+.idea/
+*.iml
+
+# Environment & Credentials
+*.key
+*.jks
+*.keystore
+.env
+.env.production
+.env.development
+firebase_options.dart
+
+# Logs & Temporary Files
+*.log
+*.tmp
+*.lock
+pubspec.lock
