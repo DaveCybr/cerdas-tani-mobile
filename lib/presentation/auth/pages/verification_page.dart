@@ -34,7 +34,7 @@ class VerificationCode extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
-                CustomPinCode(),
+                const CustomPinCode(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

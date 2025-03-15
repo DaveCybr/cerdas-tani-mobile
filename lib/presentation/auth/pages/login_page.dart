@@ -3,6 +3,7 @@ import 'package:fertilizer_calculator/core/constans/colors.dart';
 import 'package:fertilizer_calculator/presentation/auth/pages/password_recovery_page.dart';
 import 'package:fertilizer_calculator/presentation/auth/pages/signup_page.dart';
 import 'package:fertilizer_calculator/presentation/auth/provider/user_provider.dart';
+import 'package:fertilizer_calculator/presentation/auth/widgets/dialog_auth.dart';
 import 'package:fertilizer_calculator/presentation/home/pages/dashboard_page.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_texfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -89,6 +90,32 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   final key = GlobalKey<FormState>();
+  bool isLoading = false;
+
+  Future<void> _login(BuildContext context) async {
+    if (!key.currentState!.validate()) return;
+    setState(() => isLoading = true);
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardPage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      showCustomDialog(
+        context: context,
+        isSuccess: false,
+        message: "Email or password is incorrect",
+        onConfirm: () {},
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -166,16 +193,9 @@ class _LoginPageState extends State<LoginPage> {
                               CustomButton(
                                 text: "Sign In",
                                 color: AppColors.primary,
+                                isLoading: isLoading, // Tambahkan ini
                                 onTap: () {
-                                  if (key.currentState!.validate()) {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const DashboardPage(),
-                                      ),
-                                    );
-                                  }
+                                  _login(context);
                                 },
                               ),
                               Text(

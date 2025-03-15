@@ -2,6 +2,8 @@ import 'package:fertilizer_calculator/presentation/auth/pages/login_page.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_back_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_texfield.dart';
+import 'package:fertilizer_calculator/presentation/auth/widgets/dialog_auth.dart';
+import 'package:fertilizer_calculator/presentation/home/pages/dashboard_page.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 import '../../../core/constans/colors.dart';
@@ -16,6 +18,7 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   bool obscure = false;
   final key = GlobalKey<FormState>();
+  bool isLoading = false; // Tambahkan state loading
 
   // Controllers
   final TextEditingController _emailController = TextEditingController();
@@ -55,6 +58,38 @@ class _SignupPageState extends State<SignupPage> {
       return "Password must contain at least one number";
     }
     return null;
+  }
+
+  Future<void> _signUp() async {
+    if (!key.currentState!.validate()) return;
+
+    setState(() => isLoading = true); // Mulai loading
+
+    try {
+      await Future.delayed(const Duration(seconds: 2)); // Simulasi request API
+
+      showCustomDialog(
+        context: context,
+        isSuccess: true,
+        message: "Sign Up Success!",
+        onConfirm: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardPage()),
+          );
+        },
+      );
+    } catch (e) {
+      // Handle error
+      showCustomDialog(
+        context: context,
+        isSuccess: false,
+        message: "Email is already registered",
+        onConfirm: () {},
+      );
+    }
+
+    setState(() => isLoading = false); // Selesai loading
   }
 
   @override
@@ -146,14 +181,12 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                     SizedBox(height: width > 600 ? 30 : 20), // Spasi dinamis
                     CustomButton(
+                      text: "Sign In",
+                      color: AppColors.primary,
+                      isLoading: isLoading, // Tambahkan ini
                       onTap: () {
-                        if (key.currentState!.validate()) {
-                          // Tambahkan logika navigasi atau API request
-                          print("Email: ${_emailController.text}");
-                          print("Password: ${_passwordController.text}");
-                        }
+                        _signUp();
                       },
-                      text: "Sign Up",
                     ),
                   ],
                 ),
