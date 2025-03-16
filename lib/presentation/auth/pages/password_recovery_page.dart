@@ -7,6 +7,7 @@ import 'package:iconly/iconly.dart';
 import '../../../core/constans/colors.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_texfield.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PasswordRecoveryPage extends StatefulWidget {
   const PasswordRecoveryPage({Key? key}) : super(key: key);
@@ -40,6 +41,21 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
     if (_formKey.currentState!.validate()) {
       print("Email: ${_emailController.text}");
       NavigatorHelper.slideTo(context, const VerificationCode());
+    }
+  }
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> resetPassword(String email, BuildContext context) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Link reset password telah dikirim ke email")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Terjadi kesalahan: ${e.toString()}")),
+      );
     }
   }
 
