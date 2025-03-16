@@ -4,6 +4,7 @@ import 'package:fertilizer_calculator/presentation/auth/widgets/custom_button.da
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_texfield.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/dialog_auth.dart';
 import 'package:fertilizer_calculator/presentation/home/pages/dashboard_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 import '../../../core/constans/colors.dart';
@@ -67,6 +68,9 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       await Future.delayed(const Duration(seconds: 2)); // Simulasi request API
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+              email: _emailController.text, password: _passwordController.text);
 
       showCustomDialog(
         context: context,
@@ -94,106 +98,113 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        extendBody: true,
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            double width = constraints.maxWidth;
-            double paddingSize = width > 600 ? 40 : 20; // Padding responsif
+    return Scaffold(
+      backgroundColor: Colors.white,
+      extendBody: true,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          double width = constraints.maxWidth;
+          double paddingSize = width > 600 ? 40 : 20; // Padding responsif
 
-            return SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.all(paddingSize),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // const SizedBox(height: 10), // Memberikan jarak atas;
-                    Align(
-                      alignment: Alignment.centerLeft,
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(paddingSize),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20), // Memberikan jarak atas;
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: 20,
+                      ),
                       child: CustomBackButton(
                         context: context,
                         destination: const LoginPage(),
                       ),
                     ),
-                    // SizedBox(height: width > 600 ? 50 : 20), // Spasi dinamis
-                    Image.asset("assets/images/logo.png",
-                        width: 150, height: 150),
-                    const SizedBox(height: 5),
-                    Text(
-                      "Welcome",
+                  ),
+                  // SizedBox(height: width > 600 ? 50 : 20), // Spasi dinamis
+                  const SizedBox(height: 20),
+                  Image.asset(
+                    "assets/images/logo.png",
+                    height: 100,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Welcome",
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineLarge!
+                        .copyWith(fontSize: width > 600 ? 32 : 24),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      "Please enter your account here",
                       style: Theme.of(context)
                           .textTheme
-                          .headlineLarge!
-                          .copyWith(fontSize: width > 600 ? 32 : 24),
+                          .bodyLarge!
+                          .copyWith(fontSize: width > 600 ? 18 : 14),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        "Please enter your account here",
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge!
-                            .copyWith(fontSize: width > 600 ? 18 : 14),
-                      ),
+                  ),
+                  SizedBox(height: width > 600 ? 50 : 20),
+                  Form(
+                    key: key,
+                    child: Column(
+                      children: [
+                        CustomTextFormFild(
+                          controller: _emailController,
+                          validator: validateEmail,
+                          hint: "Email",
+                          prefixIcon: IconlyBroken.message,
+                        ),
+                        SizedBox(height: width > 600 ? 50 : 20),
+                        CustomTextFormFild(
+                          controller: _passwordController,
+                          onChanged: (value) {
+                            setState(() {
+                              _numberofDigits = value.length >= 6;
+                              _containsANumber =
+                                  RegExp(r'[0-9]').hasMatch(value);
+                            });
+                          },
+                          validator: validatePassword,
+                          obscureText: obscure,
+                          hint: "Password",
+                          prefixIcon: IconlyBroken.lock,
+                          suffixIcon:
+                              obscure ? IconlyBroken.show : IconlyBroken.hide,
+                          onTapSuffixIcon: () {
+                            setState(() {
+                              obscure = !obscure;
+                            });
+                          },
+                        ),
+                        SizedBox(height: width > 600 ? 50 : 20),
+                        passwordTerms(
+                          contains: _containsANumber,
+                          atLeast6: _numberofDigits,
+                        ),
+                      ],
                     ),
-                    SizedBox(height: width > 600 ? 50 : 20),
-                    Form(
-                      key: key,
-                      child: Column(
-                        children: [
-                          CustomTextFormFild(
-                            controller: _emailController,
-                            validator: validateEmail,
-                            hint: "Email",
-                            prefixIcon: IconlyBroken.message,
-                          ),
-                          SizedBox(height: width > 600 ? 50 : 20),
-                          CustomTextFormFild(
-                            controller: _passwordController,
-                            onChanged: (value) {
-                              setState(() {
-                                _numberofDigits = value.length >= 6;
-                                _containsANumber =
-                                    RegExp(r'[0-9]').hasMatch(value);
-                              });
-                            },
-                            validator: validatePassword,
-                            obscureText: obscure,
-                            hint: "Password",
-                            prefixIcon: IconlyBroken.lock,
-                            suffixIcon:
-                                obscure ? IconlyBroken.show : IconlyBroken.hide,
-                            onTapSuffixIcon: () {
-                              setState(() {
-                                obscure = !obscure;
-                              });
-                            },
-                          ),
-                          SizedBox(height: width > 600 ? 50 : 20),
-                          passwordTerms(
-                            contains: _containsANumber,
-                            atLeast6: _numberofDigits,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: width > 600 ? 30 : 20), // Spasi dinamis
-                    CustomButton(
-                      text: "Sign In",
-                      color: AppColors.primary,
-                      isLoading: isLoading, // Tambahkan ini
-                      onTap: () {
-                        _signUp();
-                      },
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: width > 600 ? 30 : 20), // Spasi dinamis
+                  CustomButton(
+                    text: "Sign Up",
+                    color: AppColors.primary,
+                    isLoading: isLoading, // Tambahkan ini
+                    onTap: () {
+                      _signUp();
+                    },
+                  ),
+                ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

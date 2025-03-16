@@ -43,57 +43,55 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Reset Your Password",
-                  style: Theme.of(context).textTheme.headlineLarge,
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Reset Your Password",
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  "Please enter your new password",
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    "Please enter your new password",
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ),
-                CustomTextFormFild(
-                  onChanged: _validatePassword,
-                  validator: _passwordValidator,
-                  controller: _passwordController,
-                  obscureText: obscure,
-                  hint: "Password",
-                  prefixIcon: IconlyBroken.lock,
-                  suffixIcon: obscure ? IconlyBroken.show : IconlyBroken.hide,
-                  onTapSuffixIcon: () {
-                    setState(() {
-                      obscure = !obscure;
-                    });
-                  },
-                ),
-                const SizedBox(height: 20),
-                PasswordRequirements(
-                  atLeast6: _atLeast6Chars,
-                  containsNumber: _containsNumber,
-                ),
-                const SizedBox(height: 20),
-                CustomButton(
-                  onTap: () {
-                    if (_formKey.currentState!.validate()) {
-                      print("Password: ${_passwordController.text}");
-                      NavigatorHelper.slideTo(context, const LoginPage());
-                    }
-                  },
-                  text: "Done",
-                ),
-              ],
-            ),
+              ),
+              CustomTextFormFild(
+                onChanged: _validatePassword,
+                validator: _passwordValidator,
+                controller: _passwordController,
+                obscureText: obscure,
+                hint: "Password",
+                prefixIcon: IconlyBroken.lock,
+                suffixIcon: obscure ? IconlyBroken.show : IconlyBroken.hide,
+                onTapSuffixIcon: () {
+                  setState(() {
+                    obscure = !obscure;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              PasswordRequirements(
+                atLeast6: _atLeast6Chars,
+                containsNumber: _containsNumber,
+              ),
+              const SizedBox(height: 20),
+              CustomButton(
+                onTap: () {
+                  if (_formKey.currentState!.validate()) {
+                    print("Password: ${_passwordController.text}");
+                    NavigatorHelper.slideTo(context, const LoginPage());
+                  }
+                },
+                text: "Done",
+              ),
+            ],
           ),
         ),
       ),

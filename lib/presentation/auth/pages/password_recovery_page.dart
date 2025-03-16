@@ -45,56 +45,59 @@ class _PasswordRecoveryPageState extends State<PasswordRecoveryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const SizedBox(height: 30), // Memberikan jarak atas
-                  Align(
-                    alignment: Alignment.centerLeft,
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 20), // Memberikan jarak atas;
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 20,
+                    ),
                     child: CustomBackButton(
                       context: context,
                       destination: const LoginPage(),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Image.asset(
-                    "assets/images/logo.png",
-                    width: 130,
-                    height: 120,
+                ),
+                // SizedBox(height: width > 600 ? 50 : 20), // Spasi dinamis
+                const SizedBox(height: 20),
+                Image.asset(
+                  "assets/images/logo.png",
+                  height: 100,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Password recovery',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                    "Enter your email to recover your password",
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Password recovery',
-                    style: Theme.of(context).textTheme.headlineLarge,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text(
-                      "Enter your email to recover your password",
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  CustomTextFormFild(
-                    controller: _emailController,
-                    validator: _validateEmail,
-                    hint: "Email",
-                    prefixIcon: IconlyBroken.message,
-                  ),
-                  const SizedBox(height: 20),
-                  CustomButton(
-                    onTap: _submit,
-                    text: "Next",
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                CustomTextFormFild(
+                  controller: _emailController,
+                  validator: _validateEmail,
+                  hint: "Email",
+                  prefixIcon: IconlyBroken.message,
+                ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  onTap: _submit,
+                  text: "Next",
+                ),
+              ],
             ),
           ),
         ),

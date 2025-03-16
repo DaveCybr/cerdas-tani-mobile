@@ -14,8 +14,7 @@ class VerificationCode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: Scaffold(
+    return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -78,6 +77,6 @@ class VerificationCode extends StatelessWidget {
           ],
         ),
       ),
-    ));
+    );
   }
 }

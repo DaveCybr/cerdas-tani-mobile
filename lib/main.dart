@@ -19,6 +19,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await Firebase.initializeApp();
+
   runApp(
     MultiProvider(
       providers: [
@@ -44,20 +45,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        // Cek tema sistem (dark atau light)
+        // Ubah warna status bar dan indikator berdasarkan tema sistem atau tema aplikasi
         final Brightness systemBrightness =
             MediaQuery.of(context).platformBrightness;
 
-        // Ubah warna status bar dan indikator berdasarkan tema sistem atau tema aplikasi
-        SystemChrome.setSystemUIOverlayStyle(
-          themeProvider.currentTheme == ThemeMode.system
-              ? (systemBrightness == Brightness.dark
-                  ? SystemUiOverlayStyle.light // Jika sistem gelap, ikon putih
-                  : SystemUiOverlayStyle.dark) // Jika sistem terang, ikon hitam
-              : themeProvider.currentTheme == ThemeMode.dark
-                  ? SystemUiOverlayStyle.light // Tema gelap, ikon putih
-                  : SystemUiOverlayStyle.dark, // Tema terang, ikon hitam
-        );
+        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent, // Membuat status bar transparan
+          statusBarIconBrightness: systemBrightness == Brightness.dark
+              ? Brightness.light
+              : Brightness.dark,
+        ));
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
