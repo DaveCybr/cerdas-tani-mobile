@@ -13,9 +13,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
-
 import '../../../core/helpers/navigation.dart';
 import '../widgets/custom_button.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -39,7 +39,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    // Membersihkan controller saat halaman ditutup
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -58,17 +57,36 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleGoogleSignIn() async {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const DashboardPage()),
-      (route) => false,
-    );
-    // final userProvider =
-    //     await context.read<UserProvider>().signInWithGoogle(context: context);
-    // setState(() {
-    //   _user = userProvider;
-    // });
-    // context.push(const DashboardPage());
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        return;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      box.write('google_account_id', userCredential.user?.uid);
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardPage()),
+        (route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Google Sign-In failed: $e")),
+      );
+    }
   }
 
   String? _validateEmail(String? value) {
@@ -119,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: true, // Mengizinkan halaman untuk bisa ditutup
+      canPop: true,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: LayoutBuilder(
@@ -144,8 +162,10 @@ class _LoginPageState extends State<LoginPage> {
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       const SizedBox(height: 5),
-                      Text("Please enter your account here",
-                          style: Theme.of(context).textTheme.bodyLarge),
+                      Text(
+                        "Please enter your account here",
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
                       const SizedBox(height: 20),
                       Form(
                         key: key,
@@ -193,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
                             CustomButton(
                               text: "Sign In",
                               color: AppColors.primary,
-                              isLoading: isLoading, // Tambahkan ini
+                              isLoading: isLoading,
                               onTap: () {
                                 _login(context);
                               },

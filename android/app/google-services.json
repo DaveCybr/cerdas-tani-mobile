@@ -7,31 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:245587460934:android:3fcfc665aec1e9ead21b47",
-        "android_client_info": {
-          "package_name": "com.example.flutter_firebase_project"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAMXqSMehN_eqWDxBpJ7JvLKtuVlnOGMvk"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:245587460934:android:017c48f67914dbebd21b47",
         "android_client_info": {
           "package_name": "com.fertilizer.calculator"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "245587460934-3d202516nsqf8bcqtneve6e8rl439ne1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fertilizer.calculator",
+            "certificate_hash": "0e02bff15e4b8ce4aac50cf051fac9c1180f734d"
+          }
+        },
+        {
+          "client_id": "245587460934-bk0pcdqckf7j44v74qidhekdgdrmheen.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAMXqSMehN_eqWDxBpJ7JvLKtuVlnOGMvk"
@@ -39,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "245587460934-bk0pcdqckf7j44v74qidhekdgdrmheen.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

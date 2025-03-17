@@ -5,7 +5,9 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class CustomPinCode extends StatelessWidget {
-  const CustomPinCode({Key? key}) : super(key: key);
+  final Function(String) onChanged;
+
+  const CustomPinCode({Key? key, required this.onChanged}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,14 +16,14 @@ class CustomPinCode extends StatelessWidget {
       child: PinCodeTextField(
         keyboardType: TextInputType.number,
         appContext: context,
-        length: 4,
-        onChanged: (value) {},
+        length: 6,
+        onChanged: onChanged, // Teruskan nilai ke widget induk
         pinTheme: PinTheme(
           shape: PinCodeFieldShape.box,
           borderRadius: BorderRadius.circular(15),
           borderWidth: 2,
-          fieldHeight: 70,
-          fieldWidth: 70,
+          fieldHeight: 40,
+          fieldWidth: 40,
           selectedColor: AppColors.primary,
           activeColor: AppColors.outline,
           inactiveColor: AppColors.outline,

@@ -1,13 +1,19 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:fertilizer_calculator/core/constans/colors.dart';
 import 'package:fertilizer_calculator/core/helpers/navigation.dart';
 import 'package:fertilizer_calculator/presentation/auth/pages/login_page.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_texfield.dart';
-import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 
 class NewPasswordPage extends StatefulWidget {
-  const NewPasswordPage({Key? key}) : super(key: key);
+  final String email;
+  final String otp;
+
+  const NewPasswordPage({Key? key, required this.email, required this.otp})
+      : super(key: key);
 
   @override
   State<NewPasswordPage> createState() => _NewPasswordPageState();
@@ -17,6 +23,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   bool obscure = true;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   bool _containsNumber = false;
   bool _atLeast6Chars = false;
@@ -39,6 +46,56 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
       return "Password must contain at least one number";
     }
     return null;
+  }
+
+  Future<void> saveNewPassword() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    const String apiUrl = "http://sirangga.satelliteorbit.cloud/api/reset-pw";
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "email": widget.email,
+          "otp": widget.otp,
+          "new_password": _passwordController.text,
+        }),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(responseData['message'] ?? 'Password updated')),
+        );
+        NavigatorHelper.slideTo(context, const LoginPage());
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text(responseData['error'] ?? 'Failed to update password')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Something went wrong. Try again.")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -82,14 +139,25 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                 containsNumber: _containsNumber,
               ),
               const SizedBox(height: 20),
-              CustomButton(
-                onTap: () {
-                  if (_formKey.currentState!.validate()) {
-                    print("Password: ${_passwordController.text}");
-                    NavigatorHelper.slideTo(context, const LoginPage());
-                  }
-                },
-                text: "Done",
+              ElevatedButton(
+                onPressed: saveNewPassword,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                    : const Text(
+                        "Save",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
               ),
             ],
           ),
