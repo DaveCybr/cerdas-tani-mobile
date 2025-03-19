@@ -6,6 +6,7 @@ import 'package:fertilizer_calculator/presentation/calculator/provider/calculato
 import 'package:fertilizer_calculator/presentation/calculator/provider/fertilizer_provider.dart';
 import 'package:fertilizer_calculator/presentation/calculator/provider/recipe_provider.dart';
 import 'package:fertilizer_calculator/presentation/history/provider/history_provider.dart';
+import 'package:fertilizer_calculator/presentation/home/pages/splash_page.dart';
 import 'package:fertilizer_calculator/presentation/home/provider/article_provider.dart';
 import 'package:fertilizer_calculator/presentation/user/provider/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -50,7 +51,7 @@ class MyApp extends StatelessWidget {
             MediaQuery.of(context).platformBrightness;
 
         SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent, // Membuat status bar transparan
+          statusBarColor: Colors.white, // Membuat status bar transparan
           statusBarIconBrightness: systemBrightness == Brightness.dark
               ? Brightness.light
               : Brightness.dark,
@@ -97,7 +98,8 @@ class MyApp extends StatelessWidget {
 
               bodyMedium: GoogleFonts.poppins(
                 fontSize: 15,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0.5,
               ),
               //this font we will use later 'S'
               bodySmall: GoogleFonts.poppins(

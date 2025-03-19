@@ -107,8 +107,11 @@ class $AssetsImagesGen {
   /// File path: assets/images/ms.png
   AssetGenImage get ms => const AssetGenImage('assets/images/ms.png');
 
+  /// File path: assets/images/pp-icon.png
+  AssetGenImage get plant => const AssetGenImage('assets/images/pp-icon.png');
+
   /// File path: assets/images/plant.png
-  AssetGenImage get plant => const AssetGenImage('assets/images/plant.png');
+  AssetGenImage get puh => const AssetGenImage('assets/images/plant.png');
 
   /// File path: assets/images/pmp.png
   AssetGenImage get pmp => const AssetGenImage('assets/images/pmp.png');
@@ -140,6 +143,7 @@ class $AssetsImagesGen {
         amp,
         ba,
         calculator,
+        puh,
         calnit,
         ce,
         cn,

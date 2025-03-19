@@ -1,26 +1,31 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:fertilizer_calculator/data/fertilizer_data.dart';
 import 'package:fertilizer_calculator/presentation/calculator/models/fertilizer_model.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FertilizerProvider with ChangeNotifier {
+  String? _selectedValue; // Variabel untuk menyimpan selectedValue
+
+  String? get selectedValue => _selectedValue;
+
+  void setSelectedValue(String? value) {
+    _selectedValue = value;
+    notifyListeners();
+  }
+
   List<FertilizerModel> selectedFertilizers = [];
-  Map<String, bool> fertilizerCheckboxStatus =
-      {}; // Untuk menyimpan status checkbox
+  Map<String, bool> fertilizerCheckboxStatus = {};
   Map<String, Map<String, dynamic>> totalNutrients = {
     'macro': {},
     'micro': {},
   };
 
-  // Menambahkan fertilizer dan memperbarui total nutrisi
   void addFertilizerCheck(FertilizerModel fertilizer) {
     selectedFertilizers.add(fertilizer);
     fertilizerCheckboxStatus[fertilizer.name] = true;
 
-    // Menambahkan nutrisi macro dengan pembulatan
     fertilizer.macro.forEach((key, value) {
       totalNutrients['macro']![key] =
           ((totalNutrients['macro']![key] ?? 0) + value)
@@ -29,7 +34,6 @@ class FertilizerProvider with ChangeNotifier {
           (totalNutrients['macro']![key]! * 1000).round() / 1000.0;
     });
 
-    // Menambahkan nutrisi micro dengan pembulatan
     fertilizer.micro.forEach((key, value) {
       totalNutrients['micro']![key] =
           ((totalNutrients['micro']![key] ?? 0) + value)
@@ -38,7 +42,6 @@ class FertilizerProvider with ChangeNotifier {
           (totalNutrients['micro']![key]! * 1000).round() / 1000.0;
     });
 
-    // Mengupdate nilai nutrisi menjadi 0 jika ada yang 0.0
     totalNutrients['macro']
         ?.updateAll((key, value) => value == 0.0 ? 0 : value);
     totalNutrients['micro']
@@ -47,18 +50,12 @@ class FertilizerProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Menghapus fertilizer dan mengurangi total nutrisi
   void removeFertilizerCheck(FertilizerModel fertilizer) {
-    // Hapus pupuk dari selectedFertilizers
     selectedFertilizers.removeWhere((item) => item.name == fertilizer.name);
-
-    // Hapus status checkbox dari fertilizerCheckboxStatus
     fertilizerCheckboxStatus.remove(fertilizer.name);
 
-    // Mengurangi nutrisi macro dan micro dengan pembulatan
     fertilizer.macro.forEach((key, value) {
       if (totalNutrients['macro']!.containsKey(key)) {
-        // Mengurangi nilai, membulatkan ke tiga angka desimal, dan memastikan tidak negatif
         totalNutrients['macro']![key] = (totalNutrients['macro']![key]! - value)
             .clamp(0.0, double.infinity);
         totalNutrients['macro']![key] =
@@ -68,7 +65,6 @@ class FertilizerProvider with ChangeNotifier {
 
     fertilizer.micro.forEach((key, value) {
       if (totalNutrients['micro']!.containsKey(key)) {
-        // Mengurangi nilai, membulatkan ke tiga angka desimal, dan memastikan tidak negatif
         totalNutrients['micro']![key] = (totalNutrients['micro']![key]! - value)
             .clamp(0.0, double.infinity);
         totalNutrients['micro']![key] =
@@ -76,34 +72,27 @@ class FertilizerProvider with ChangeNotifier {
       }
     });
 
-    // Mengupdate nilai nutrisi menjadi 0 jika ada yang 0.0
     totalNutrients['macro']
         ?.updateAll((key, value) => value == 0.0 ? 0 : value);
     totalNutrients['micro']
         ?.updateAll((key, value) => value == 0.0 ? 0 : value);
 
-    // Periksa apakah semua nilai di totalNutrients adalah 0
     bool allZero = totalNutrients.values.every(
         (nutrientMap) => nutrientMap.values.every((value) => value == 0));
-
     if (allZero) {
-      // Set semua nilai di totalNutrients menjadi 0 tanpa koma
       totalNutrients['macro'] =
           totalNutrients['macro']!.map((key, _) => MapEntry(key, 0));
       totalNutrients['micro'] =
           totalNutrients['micro']!.map((key, _) => MapEntry(key, 0));
     }
 
-    // Update UI
     notifyListeners();
   }
 
-  // Mendapatkan total nutrisi yang terakumulasi
   Map<String, Map<String, dynamic>> get selectedFertilizerNutrients {
     return totalNutrients;
   }
 
-  // Memeriksa apakah fertilizer telah dipilih
   bool isFertilizerChecked(String name) {
     return fertilizerCheckboxStatus[name] ?? false;
   }
@@ -115,7 +104,6 @@ class FertilizerProvider with ChangeNotifier {
     totalNutrients['macro']?.clear();
     totalNutrients['micro']?.clear();
 
-    // Algoritma pencarian kombinasi sederhana
     for (var fertilizer in fertilizers) {
       bool meetsTarget = true;
 
@@ -124,16 +112,6 @@ class FertilizerProvider with ChangeNotifier {
             (value is String
                 ? double.tryParse(value) ?? 0.0
                 : value.toDouble());
-
-        // Cek apakah total melebihi target
-        // if (currentTotal >
-        //     (targetNutrients['macro']?[key] is String
-        //         ? double.tryParse(targetNutrients['macro']?[key]) ??
-        //             double.infinity
-        //         : targetNutrients['macro']?[key]?.toDouble() ??
-        //             double.infinity)) {
-        //   meetsTarget = false;
-        // }
       });
 
       fertilizer.micro.forEach((key, value) {
@@ -141,35 +119,31 @@ class FertilizerProvider with ChangeNotifier {
             (value is String
                 ? double.tryParse(value) ?? 0.0
                 : value.toDouble());
-
-        // Cek apakah total melebihi target
-        // if (currentTotal >
-        //     (targetNutrients['micro']?[key] is String
-        //         ? double.tryParse(targetNutrients['micro']?[key]) ??
-        //             double.infinity
-        //         : targetNutrients['micro']?[key]?.toDouble() ??
-        //             double.infinity)) {
-        //   meetsTarget = false;
-        // }
       });
 
-      // Hanya tambahkan pupuk jika memenuhi target
       if (meetsTarget && !selectedFertilizers.contains(fertilizer)) {
         addFertilizerCheck(fertilizer);
       }
     }
+
+    notifyListeners();
+  }
+
+  void resetAutoSelection() {
+    selectedFertilizers.clear();
+    fertilizerCheckboxStatus.clear();
+    totalNutrients['macro']?.clear();
+    totalNutrients['micro']?.clear();
     notifyListeners();
   }
 
   Future<String> saveImageToAppDir(String? imagePath) async {
     if (imagePath == null || imagePath.startsWith('assets/')) {
-      return imagePath ??
-          ''; // Jika null atau dari assets, tetap pakai yang ada
+      return imagePath ?? '';
     }
 
     final appDir = await getApplicationDocumentsDirectory();
     final imageDirectory = Directory('${appDir.path}/images');
-
     if (!await imageDirectory.exists()) {
       await imageDirectory.create(recursive: true);
     }
@@ -182,14 +156,14 @@ class FertilizerProvider with ChangeNotifier {
       return newImagePath;
     } else {
       print('File tidak ditemukan: $imagePath');
-      return imagePath; // Jika file tidak ada, tetap pakai path asli
+      return imagePath;
     }
   }
 
   Future<void> updateFertilizer(
     String oldName,
     String newName,
-    String? newImagePath, // Bisa null jika user tidak mengubah gambar
+    String? newImagePath,
     String category,
     int weight,
     String type,
@@ -206,12 +180,10 @@ class FertilizerProvider with ChangeNotifier {
 
       if (fertilizer.isNotEmpty) {
         int fertilizerId = fertilizer.first['id'] as int;
-        print('fertilizerId: $fertilizerId');
-
         Object? currentImagePath = fertilizer.first['image'];
         final imagePathToSave = newImagePath != null
             ? await saveImageToAppDir(newImagePath)
-            : currentImagePath; // Pakai gambar lama jika tidak ada perubahan
+            : currentImagePath;
 
         await db.update(
           'fertilizers',
@@ -219,7 +191,6 @@ class FertilizerProvider with ChangeNotifier {
             'name': newName,
             'image': imagePathToSave,
             'category': category,
-            // 'price': price,
             'weight': weight,
             'type': type,
             'macro': jsonEncode(macro),
@@ -228,6 +199,7 @@ class FertilizerProvider with ChangeNotifier {
           where: 'id = ?',
           whereArgs: [fertilizerId],
         );
+
         print('Fertilizer updated: $newName with ID: $fertilizerId');
       }
     } catch (e) {
@@ -236,7 +208,7 @@ class FertilizerProvider with ChangeNotifier {
   }
 
   Future<void> addFertilizer(
-    String? imagePath, // Bisa null jika user tidak memilih gambar
+    String? imagePath,
     String name,
     String category,
     int weight,
@@ -246,7 +218,6 @@ class FertilizerProvider with ChangeNotifier {
   ) async {
     try {
       final imagePathToSave = await saveImageToAppDir(imagePath);
-
       final db = await FertilizerDatabase.instance.database;
       await db.insert('fertilizers', {
         'image': imagePathToSave,
@@ -258,6 +229,7 @@ class FertilizerProvider with ChangeNotifier {
         'macro': jsonEncode(macro),
         'micro': jsonEncode(micro),
       });
+
       print('Fertilizer added: $name');
     } catch (e) {
       print('Error adding fertilizer: $e');
@@ -267,8 +239,6 @@ class FertilizerProvider with ChangeNotifier {
   Future<void> deleteFertilizerByName(String name) async {
     try {
       final db = await FertilizerDatabase.instance.database;
-
-      // Get the fertilizer details by name
       final fertilizer = await db.query(
         'fertilizers',
         where: 'name = ?',
@@ -276,17 +246,14 @@ class FertilizerProvider with ChangeNotifier {
       );
 
       if (fertilizer.isNotEmpty) {
-        // Get the fertilizer ID and image path
         int fertilizerId = fertilizer.first['id'] as int;
         final imagePath = fertilizer.first['image'] as String;
-
-        // Delete the image file if it exists
         final imageFile = File(imagePath);
+
         if (await imageFile.exists()) {
           await imageFile.delete();
         }
 
-        // Delete the fertilizer from the database
         await db.delete(
           'fertilizers',
           where: 'id = ?',

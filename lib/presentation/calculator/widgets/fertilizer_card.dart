@@ -26,26 +26,34 @@ class _FertilizerCardState extends State<FertilizerCard> {
   Widget build(BuildContext context) {
     bool isChecked = Provider.of<FertilizerProvider>(context)
         .isFertilizerChecked(widget.data.name);
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Container(
-      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.card
-            : Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(
+            color: const Color(0xFF1FCC79).withOpacity(1), width: 1.0),
+        color: const Color.fromARGB(255, 254, 255, 254),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            blurRadius: 3,
+            offset: Offset(1, 2),
+          ),
+        ],
       ),
+      height: screenHeight * 0.24,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      alignment: Alignment.topLeft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.all(6.0),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[100],
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(100)),
+          Expanded(
+            child: Align(
+              alignment: Alignment
+                  .bottomRight, // Mengatur posisi gambar ke bawah kanan
               child: widget.data.image.isNotEmpty &&
                       (widget.data.image.startsWith('assets/') ||
                           File(widget.data.image).existsSync())
@@ -64,25 +72,23 @@ class _FertilizerCardState extends State<FertilizerCard> {
                     ),
             ),
           ),
-          const Spacer(),
-          Text(
-            widget.data.name,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SpaceHeight(8.0),
+          const SizedBox(height: 10),
           Text(
             widget.data.category,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  fontSize: screenWidth * 0.042,
+                ),
+            textAlign: TextAlign.center,
           ),
-          const SpaceHeight(8.0),
+          const SizedBox(height: 10),
+          Text(
+            widget.data.name,
+            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                  fontSize: screenWidth * 0.032,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -91,26 +97,24 @@ class _FertilizerCardState extends State<FertilizerCard> {
                   padding: const EdgeInsets.all(6),
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(9.0)),
-                    color: AppColors.darkblue,
+                    color: AppColors.primary,
                   ),
                   child: InkWell(
                     onTap: () {
                       widget.detailFertilizer();
                     },
-                    child: const Center(
+                    child: Center(
                       child: Text(
                         'Detail',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: AppColors.light,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              color: Colors.white,
+                            ),
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -129,7 +133,7 @@ class _FertilizerCardState extends State<FertilizerCard> {
                   decoration: BoxDecoration(
                     borderRadius: const BorderRadius.all(Radius.circular(9.0)),
                     color: isChecked
-                        ? AppColors.darkgreen
+                        ? AppColors.primary
                         : Colors.grey, // Change color based on state
                   ),
                   child: Icon(
@@ -145,5 +149,124 @@ class _FertilizerCardState extends State<FertilizerCard> {
         ],
       ),
     );
+    // return Container(
+    //   padding: const EdgeInsets.all(16.0),
+    //   decoration: BoxDecoration(
+    //     color: Theme.of(context).brightness == Brightness.dark
+    //         ? AppColors.card
+    //         : Colors.white,
+    //     borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+    //   ),
+    //   child: Column(
+    //     crossAxisAlignment: CrossAxisAlignment.start,
+    //     children: [
+    //       Container(
+    //         alignment: Alignment.center,
+    //         padding: const EdgeInsets.all(6.0),
+    //         decoration: BoxDecoration(
+    //           shape: BoxShape.circle,
+    //           color: Colors.grey[100],
+    //         ),
+    //         child: ClipRRect(
+    //           borderRadius: const BorderRadius.all(Radius.circular(100)),
+    //           child: widget.data.image.isNotEmpty &&
+    //                   (widget.data.image.startsWith('assets/') ||
+    //                       File(widget.data.image).existsSync())
+    //               ? (widget.data.image.startsWith('assets/')
+    //                   ? Image.asset(widget.data.image,
+    //                       height: 135, width: 135, fit: BoxFit.cover)
+    //                   : Image.file(File(widget.data.image),
+    //                       height: 135, width: 135, fit: BoxFit.cover))
+    //               : Container(
+    //                   height: 135,
+    //                   width: 135,
+    //                   decoration: BoxDecoration(
+    //                       color: Colors.grey[300], shape: BoxShape.circle),
+    //                   child: const Icon(Icons.image_not_supported,
+    //                       size: 75, color: Colors.red),
+    //                 ),
+    //         ),
+    //       ),
+    //       const Spacer(),
+    //       Text(
+    //         widget.data.name,
+    //         style: const TextStyle(
+    //           fontSize: 16,
+    //           fontWeight: FontWeight.w700,
+    //         ),
+    //         maxLines: 2,
+    //         overflow: TextOverflow.ellipsis,
+    //       ),
+    //       const SpaceHeight(8.0),
+    //       Text(
+    //         widget.data.category,
+    //         style: const TextStyle(
+    //           color: Colors.grey,
+    //           fontSize: 12,
+    //         ),
+    //       ),
+    //       const SpaceHeight(8.0),
+    //       Row(
+    //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //         children: [
+    //           Expanded(
+    //             child: Container(
+    //               padding: const EdgeInsets.all(6),
+    //               decoration: const BoxDecoration(
+    //                 borderRadius: BorderRadius.all(Radius.circular(9.0)),
+    //                 color: AppColors.darkblue,
+    //               ),
+    //               child: InkWell(
+    //                 onTap: () {
+    //                   widget.detailFertilizer();
+    //                 },
+    //                 child: const Center(
+    //                   child: Text(
+    //                     'Detail',
+    //                     style: TextStyle(
+    //                       fontWeight: FontWeight.w700,
+    //                       fontSize: 16,
+    //                       color: AppColors.light,
+    //                     ),
+    //                   ),
+    //                 ),
+    //               ),
+    //             ),
+    //           ),
+    //           const SizedBox(width: 8),
+    //           GestureDetector(
+    //             onTap: () {
+    //               setState(() {
+    //                 isChecked = !isChecked;
+    //               });
+    //               if (isChecked) {
+    //                 Provider.of<FertilizerProvider>(context, listen: false)
+    //                     .addFertilizerCheck(widget.data);
+    //               } else {
+    //                 Provider.of<FertilizerProvider>(context, listen: false)
+    //                     .removeFertilizerCheck(widget.data);
+    //               }
+    //             },
+    //             child: Container(
+    //               padding: const EdgeInsets.all(6),
+    //               decoration: BoxDecoration(
+    //                 borderRadius: const BorderRadius.all(Radius.circular(9.0)),
+    //                 color: isChecked
+    //                     ? AppColors.darkgreen
+    //                     : Colors.grey, // Change color based on state
+    //               ),
+    //               child: Icon(
+    //                 isChecked
+    //                     ? Icons.check
+    //                     : null, // Show check icon if checked
+    //                 color: Colors.white,
+    //               ),
+    //             ),
+    //           ),
+    //         ],
+    //       ),
+    //     ],
+    //   ),
+    // );
   }
 }

@@ -20,6 +20,7 @@ class CalculatorPage extends StatefulWidget {
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
+  // Dummy data pupuk
   final TextEditingController literController = TextEditingController();
   final TextEditingController konsentrasiController = TextEditingController();
 
@@ -40,359 +41,399 @@ class _CalculatorPageState extends State<CalculatorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        padding:
-            EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.04),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const Center(
-                child: Text(
-                  'Kalkulator Nutrisi\nHidroponik',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center, // Tambahan opsional
-                ),
-              ),
-              const SpaceHeight(15),
-              const Row(
-                children: [
-                  Icon(
-                    Icons.book_outlined,
-                    color: Colors.grey,
-                  ),
-                  Text(
-                    ' Komposisi dan Dosis Pupuk Nutrisi',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
-                ],
-              ),
-              Container(
-                height: 165,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.card
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          InkWell(
-                            onTap: () {
-                              context.push(const RecipePage());
-                            },
-                            child: Container(
-                              width: 60, // Lebar lingkaran
-                              height: 60, // Tinggi lingkaran
-                              decoration: BoxDecoration(
-                                shape:
-                                    BoxShape.circle, // Membuat bentuk lingkaran
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.card
-                                    : Colors.white,
-                                border: const Border.fromBorderSide(
-                                  BorderSide(width: 4, color: Colors.green),
-                                ),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'Resep', // Teks di dalam lingkaran
-                                  style: TextStyle(
-                                    fontSize: 15, // Ukuran font
-                                    fontWeight:
-                                        FontWeight.bold, // Ketebalan font
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SpaceHeight(15),
-                          InkWell(
-                            onTap: () {
-                              context.push(const FertilizerPage());
-                            },
-                            child: Container(
-                              width: 60, // Lebar lingkaran
-                              height: 60, // Tinggi lingkaran
-                              decoration: BoxDecoration(
-                                shape:
-                                    BoxShape.circle, // Membuat bentuk lingkaran
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.card
-                                    : Colors.white,
-                                border: const Border.fromBorderSide(
-                                  BorderSide(width: 4, color: Colors.red),
-                                ),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'Pupuk', // Teks di dalam lingkaran
-                                  style: TextStyle(
-                                    fontSize: 15, // Ukuran font
-                                    fontWeight:
-                                        FontWeight.bold, // Ketebalan font
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          // 🔹 Tambahkan ini agar halaman bisa discroll
+          physics: BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tombol Back & Judul
+                const Row(
+                  children: [
+                    // IconButton(
+                    //   onPressed: () => Navigator.pop(context),
+                    //   icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    // ),
+                    SizedBox(width: 8),
+                    Text(
+                      "Kalkulator Hara",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SpaceWidth(20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Section: Keterangan
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Keterangan:',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Consumer<RecipeProvider>(
-                                builder: (context, recipeProvider, child) {
-                                  return SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.5, // Atur lebar maksimal
-                                    child: Text(
-                                      recipeProvider.selectedRecipe != null
-                                          ? 'Resep: ${recipeProvider.selectedRecipe}'
-                                          : 'Resep belum dipilih.',
-                                      style: TextStyle(
-                                        color: recipeProvider.selectedRecipe !=
-                                                null
-                                            ? Colors.green
-                                            : Colors.red,
-                                        fontSize: 12,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  );
-                                },
-                              ),
-                              Consumer<FertilizerProvider>(
-                                builder: (context, fertilizerProvider, child) {
-                                  String message = fertilizerProvider
-                                          .selectedFertilizers.isNotEmpty
-                                      ? 'Pupuk: ${fertilizerProvider.selectedFertilizers.map((fertilizer) => fertilizer.name).join(', ')}'
-                                      : 'Belum memilih pupuk';
-
-                                  return SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.5,
-                                    child: Text(
-                                      message,
-                                      style: TextStyle(
-                                        color: fertilizerProvider
-                                                .selectedFertilizers.isNotEmpty
-                                            ? Colors.green
-                                            : Colors.red,
-                                        fontSize: 12,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 2,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          const SpaceHeight(2),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Dosis:',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SpaceHeight(2),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Volume: ',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 25,
-                                    child: TextField(
-                                      controller: literController,
-                                      decoration: InputDecoration(
-                                        contentPadding: EdgeInsets.zero,
-                                        filled: true,
-                                        fillColor: Colors.transparent,
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(4.0),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        isDense: true,
-                                      ),
-                                      keyboardType: TextInputType.number,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter
-                                            .digitsOnly, // Hanya angka
-                                        LengthLimitingTextInputFormatter(
-                                            3), // Batas maksimal 3 karakter
-                                        FilteringTextInputFormatter.allow(
-                                            RegExp(r'^(100|[1-9][0-9]?)$')),
-                                      ],
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                  const Text(
-                                    'liter',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Konsentrasi: ',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 25,
-                                    child: TextField(
-                                      controller: konsentrasiController,
-                                      decoration: InputDecoration(
-                                        contentPadding: EdgeInsets.zero,
-                                        filled: true,
-                                        fillColor: Colors.transparent,
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(4.0),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        isDense: true,
-                                      ),
-                                      keyboardType: TextInputType.number,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter
-                                            .digitsOnly, // Hanya angka
-                                        LengthLimitingTextInputFormatter(
-                                            3), // Batas maksimal 3 karakter
-                                        FilteringTextInputFormatter.allow(
-                                            RegExp(r'^(100|[1-9][0-9]?)$')),
-                                      ],
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                  const Text(
-                                    '%',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 2),
                       )
                     ],
                   ),
+                  child: Row(
+                    children: [
+                      // Nama tanaman
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Program Pemupukan",
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                            Consumer<RecipeProvider>(
+                              builder: (context, recipeProvider, child) {
+                                return Text(
+                                  recipeProvider.selectedRecipe ??
+                                      'Resep belum dipilih!',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: recipeProvider.selectedRecipe != null
+                                        ? AppColors.primary
+                                        : AppColors.Secondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow
+                                      .ellipsis, // Potong teks dengan "..."
+                                  maxLines: 1, // Batasi teks dalam 1 baris
+                                  softWrap: true,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Tombol "Ganti"
+                      ElevatedButton(
+                        onPressed: () {
+                          context.push(const RecipePage());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Text(
+                          "Ganti",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  SingleSection<RecipeProvider>(
-                    title: 'Resep yang diinginkan',
-                    getProviderData: (context) {
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      // Nama tanaman & informasi pupuk
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Pupuk atau unsur hara",
+                              style:
+                                  TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                            Consumer<FertilizerProvider>(
+                              builder: (context, fertilizerProvider, child) {
+                                String message = fertilizerProvider
+                                        .selectedFertilizers.isNotEmpty
+                                    ? fertilizerProvider.selectedFertilizers
+                                        .map((fertilizer) => fertilizer.name)
+                                        .join(', ')
+                                    : 'Pupuk belum dipilih!';
+
+                                return Text(
+                                  message,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: fertilizerProvider
+                                            .selectedFertilizers.isNotEmpty
+                                        ? AppColors.primary
+                                        : AppColors.Secondary,
+                                  ),
+                                  overflow: TextOverflow
+                                      .ellipsis, // Tambahkan elipsis jika teks terlalu panjang
+                                  maxLines: 1, // Batasi teks hanya 1 baris
+                                  softWrap: true,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Tombol "Ganti"
+                      ElevatedButton(
+                        onPressed: () {
+                          context.push(const FertilizerPage());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        child: Text(
+                          "Ganti",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Dosis Section
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Dosis:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Input sejajar
+                      Row(
+                        children: [
+                          // Volume Input
+                          Flexible(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('Volume:',
+                                    style: TextStyle(fontSize: 12)),
+                                const SizedBox(width: 4),
+                                SizedBox(
+                                  width:
+                                      45, // Lebar dikurangi agar tidak overflow
+                                  child: TextField(
+                                    controller: literController,
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              vertical: 8),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(6.0),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      isDense: true,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(3),
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'^(100|[1-9][0-9]?)$')),
+                                    ],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Text('liter',
+                                    style: TextStyle(fontSize: 12)),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(width: 8), // Spacer antar input
+
+                          // Konsentrasi Input
+                          Flexible(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('Konsentrasi:',
+                                    style: TextStyle(fontSize: 12)),
+                                const SizedBox(width: 4),
+                                SizedBox(
+                                  width:
+                                      45, // Lebar dikurangi agar tidak overflow
+                                  child: TextField(
+                                    controller: konsentrasiController,
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              vertical: 8),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(6.0),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      isDense: true,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(3),
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'^(100|[1-9][0-9]?)$')),
+                                    ],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Text('%', style: TextStyle(fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: DualSection<RecipeProvider, CalculateProvider>(
+                    title: 'Perbandingan Nutrisi',
+                    getProviderData1: (context) {
                       final recipeProvider =
                           Provider.of<RecipeProvider>(context);
                       return recipeProvider.selectedRecipeNutrients ?? {};
                     },
-                  ),
-                  const SizedBox(width: 10),
-                  SingleSection<FertilizerProvider>(
-                    title: 'Pupuk yang digunakan',
-                    getProviderData: (context) {
+                    getProviderData2: (context) {
                       final calculateProvider =
-                          Provider.of<CalculateProvider>(context, listen: true);
-
-                      // print(calculateProvider.calculateResult);
-
-                      // final fertilizerProvider =
-                      // Provider.of<FertilizerProvider>(context);
-                      return calculateProvider.calculateResult;
+                          Provider.of<CalculateProvider>(context);
+                      return calculateProvider.calculateResult ?? {};
                     },
                   ),
-                  const SizedBox(width: 10),
-                  DoubleSectionTes(
-                    titleTop: 'Akurasi',
-                    titleBottom: 'Tes Pupuk',
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: DoubleSectionTes(
+                    titleTop: "Tes",
+                    titleBottom: "Tes",
                     literController: literController,
                     konsentrasiController: konsentrasiController,
                     onCalculate: () {
                       setState(() {});
                     },
-                  )
-                ],
-              ),
-              Consumer<CalculateProvider>(
-                builder: (context, provider, child) {
-                  return Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.card
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        provider
-                            .statusText, // Use the provider's statusText here
-                        style: const TextStyle(
-                          fontSize: 15, // Ukuran font
-                          fontWeight: FontWeight.bold, // Ketebalan font
+                  ),
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                Consumer<CalculateProvider>(
+                  builder: (context, provider, child) {
+                    return Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          provider
+                              .statusText, // Use the provider's statusText here
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ],
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

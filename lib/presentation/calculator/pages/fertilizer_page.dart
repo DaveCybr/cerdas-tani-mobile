@@ -18,11 +18,6 @@ class FertilizerPage extends StatefulWidget {
 
 class _FertilizerPageState extends State<FertilizerPage> {
   bool isChecked = false;
-  String? selectedValue; // Nilai default diatur ke null
-  final List<String> recipeOptions = [
-    'Indonesia',
-    'Internasional',
-  ];
   List<FertilizerModel> fertilizers = [];
   bool isFabVisible = true;
 
@@ -41,13 +36,17 @@ class _FertilizerPageState extends State<FertilizerPage> {
   }
 
   List<FertilizerModel> get filteredFertilizers {
-    if (selectedValue == null || selectedValue!.isEmpty) {
+    final fertilizerProvider =
+        Provider.of<FertilizerProvider>(context, listen: false);
+
+    if (fertilizerProvider.selectedValue == null ||
+        fertilizerProvider.selectedValue!.isEmpty) {
       return []; // Tidak ada pupuk yang ditampilkan jika lokasi kosong
-    } else if (selectedValue == 'Indonesia') {
+    } else if (fertilizerProvider.selectedValue == 'Indonesia') {
       return fertilizers
           .where((fertilizer) => fertilizer.category == 'Indonesia')
           .toList();
-    } else if (selectedValue == 'Internasional') {
+    } else if (fertilizerProvider.selectedValue == 'Internasional') {
       return fertilizers
           .where((fertilizer) => fertilizer.category == 'Internasional')
           .toList();
@@ -66,6 +65,7 @@ class _FertilizerPageState extends State<FertilizerPage> {
   Widget build(BuildContext context) {
     final recipeProvider = Provider.of<RecipeProvider>(context);
     final fertilizerProvider = Provider.of<FertilizerProvider>(context);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -99,7 +99,8 @@ class _FertilizerPageState extends State<FertilizerPage> {
                     children: [
                       const Center(
                         child: Text(
-                          'Temukan Pupuk Terbaik\ndi Sekitarmu',
+                          'Temukan Pupuk Terbaik\n'
+                          'di Sekitarmu',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -131,7 +132,7 @@ class _FertilizerPageState extends State<FertilizerPage> {
                             Expanded(
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
-                                  value: selectedValue,
+                                  value: fertilizerProvider.selectedValue,
                                   isExpanded: true,
                                   menuWidth: MediaQuery.of(context).size.width,
                                   hint: Text(
@@ -158,7 +159,8 @@ class _FertilizerPageState extends State<FertilizerPage> {
                                         ? Colors.white
                                         : AppColors.card,
                                   ),
-                                  items: recipeOptions.map((String value) {
+                                  items: const ['Indonesia', 'Internasional']
+                                      .map((String value) {
                                     return DropdownMenuItem<String>(
                                       value: value,
                                       child: Text(
@@ -169,12 +171,11 @@ class _FertilizerPageState extends State<FertilizerPage> {
                                     );
                                   }).toList(),
                                   onChanged: (String? newValue) {
-                                    setState(() {
-                                      selectedValue = newValue;
-                                    });
+                                    fertilizerProvider
+                                        .setSelectedValue(newValue);
                                   },
                                   selectedItemBuilder: (BuildContext context) {
-                                    return recipeOptions
+                                    return const ['Indonesia', 'Internasional']
                                         .map<Widget>((String value) {
                                       return Align(
                                         alignment: Alignment.centerLeft,
@@ -213,18 +214,20 @@ class _FertilizerPageState extends State<FertilizerPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            // tap untuk otomatis pilih pupuk menyesuaikan resep yang dipilih, agar pupuk yang dipilih, nutrisinya memenuhi dari keinginan resep
                             GestureDetector(
                               onTap: () {
                                 setState(() {
                                   isChecked = !isChecked;
                                 });
+
                                 if (isChecked) {
                                   fertilizerProvider.autoSelectFertilizers(
                                     filteredFertilizers,
                                     recipeProvider.selectedRecipeNutrients ??
                                         {},
                                   );
+                                } else {
+                                  fertilizerProvider.resetAutoSelection();
                                 }
                               },
                               child: Container(
@@ -234,17 +237,14 @@ class _FertilizerPageState extends State<FertilizerPage> {
                                       Radius.circular(9.0)),
                                   color: isChecked
                                       ? AppColors.darkgreen
-                                      : Colors
-                                          .grey, // Change color based on state
+                                      : Colors.grey,
                                 ),
                                 child: Icon(
-                                  isChecked
-                                      ? Icons.check
-                                      : null, // Show check icon if checked
+                                  isChecked ? Icons.check : Icons.close,
                                   color: Colors.white,
                                 ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -264,7 +264,6 @@ class _FertilizerPageState extends State<FertilizerPage> {
                               itemBuilder: (context, index) => FertilizerCard(
                                 data: filteredFertilizers[index],
                                 detailFertilizer: () {
-                                  // Navigate to another page to show fertilizer details
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -281,7 +280,7 @@ class _FertilizerPageState extends State<FertilizerPage> {
                           : const Column(
                               children: [
                                 Icon(
-                                  Icons.warning, // Ikon lokasi
+                                  Icons.warning,
                                   size: 50,
                                   color: Colors.grey,
                                 ),
@@ -299,7 +298,7 @@ class _FertilizerPageState extends State<FertilizerPage> {
                     ],
                   ),
                 ),
-                const SpaceHeight(20)
+                const SpaceHeight(20),
               ],
             ),
           ),
@@ -314,7 +313,6 @@ class _FertilizerPageState extends State<FertilizerPage> {
                 child: FloatingActionButton(
                   backgroundColor: AppColors.darkblue,
                   onPressed: () {
-                    // Navigasi ke halaman FertilizerDetailPage dengan addPage = true
                     Navigator.push(
                       context,
                       MaterialPageRoute(

@@ -1,5 +1,6 @@
 import 'package:fertilizer_calculator/core/constans/colors.dart';
 import 'package:fertilizer_calculator/core/extensions/build_context_ext.dart';
+import 'package:fertilizer_calculator/core/helpers/navigation.dart';
 import 'package:fertilizer_calculator/presentation/home/pages/detail_article_page.dart';
 import 'package:fertilizer_calculator/presentation/home/provider/article_provider.dart';
 import 'package:flutter/material.dart';
@@ -22,22 +23,48 @@ class _AllArticlesScreenState extends State<AllArticlesScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              // Tombol kembali & Judul
+              Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(52, 31, 204, 120),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back,
+                          color: AppColors.primary),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  // const SizedBox(width: 10),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Input Pencarian
+              Text(
                 "Artikel",
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: 20),
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Cari artikel...',
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon:
+                      const Icon(Icons.search, color: AppColors.primary),
+                  filled: true,
+                  fillColor: AppColors.primary.withOpacity(0.1),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
                   ),
                 ),
                 onChanged: (value) {
@@ -47,6 +74,8 @@ class _AllArticlesScreenState extends State<AllArticlesScreen> {
                 },
               ),
               const SizedBox(height: 20),
+
+              // Daftar Artikel
               Expanded(
                 child: Consumer<ArticleProvider>(
                   builder: (context, articleProvider, child) {
@@ -65,7 +94,6 @@ class _AllArticlesScreenState extends State<AllArticlesScreen> {
                     }
 
                     return ListView.builder(
-                      scrollDirection: Axis.vertical,
                       itemCount: filteredArticles.length,
                       itemBuilder: (context, index) {
                         final article = filteredArticles[index];
@@ -74,48 +102,45 @@ class _AllArticlesScreenState extends State<AllArticlesScreen> {
                           onTap: () => context
                               .push(DetailArticlePage(artikelId: article.id)),
                           child: Container(
-                            margin:
-                                const EdgeInsets.only(right: 15, bottom: 20),
+                            margin: const EdgeInsets.only(bottom: 20),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.card
-                                  : Colors.white,
-                              border: Border.all(
-                                  color: Colors.grey.withOpacity(.5), width: 2),
-                              borderRadius: BorderRadius.circular(11),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(11),
-                                      topRight: Radius.circular(11),
-                                    ),
-                                    color: Colors.green[200],
-                                    image: DecorationImage(
-                                      image: NetworkImage(article.image ??
-                                          'https://via.placeholder.com/300x120'), // Gambar artikel
-                                      fit: BoxFit.cover,
-                                    ),
+                                // Gambar Artikel
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(15),
+                                    topRight: Radius.circular(15),
+                                  ),
+                                  child: Image.network(
+                                    article.image ??
+                                        'https://via.placeholder.com/300x120',
+                                    width: double.infinity,
+                                    height: 160,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                                const Divider(
-                                  height: 0,
-                                ),
                                 Padding(
-                                  padding: const EdgeInsets.all(9.0),
+                                  padding: const EdgeInsets.all(10),
                                   child: Text(
-                                    article.name, // Judul artikel
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    maxLines: 3,
+                                    article.name,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium!
+                                        .copyWith(
+                                          fontSize: 15,
+                                        ),
                                   ),
                                 ),
                               ],

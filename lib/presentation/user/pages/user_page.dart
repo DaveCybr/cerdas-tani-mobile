@@ -78,64 +78,9 @@ class UserPage extends StatelessWidget {
                   ),
                   const SpaceHeight(25),
                   InkWell(
-                    onTap: () => _showThemeDialog(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 16),
-                      decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.card
-                              : Colors.white,
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(8))),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Icons
-                                        .nightlight_round // Icon bulan untuk dark mode
-                                    : Icons
-                                        .wb_sunny, // Icon matahari untuk light mode
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : AppColors.card,
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Tema Aplikasi",
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                  Text(
-                                    themeProvider
-                                        .themeMode, // Tampilkan tema yang dipilih
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const Icon(Icons.arrow_forward_ios,
-                              color: Colors.grey, size: 18),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SpaceHeight(25),
-                  InkWell(
                     onTap: () async {
                       await GetStorage().erase();
-                      context.push(const LoginPage());
+                      context.pushReplacement(const LoginPage());
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(

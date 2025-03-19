@@ -139,4 +139,23 @@ class CalculateProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  double calculateTotalWeight(List<Map<String, dynamic>> fertilizers) {
+    return fertilizers.fold(0.0, (total, fertilizer) {
+      double weight = (fertilizer['Weight (grams)'] ?? 0).toDouble();
+      double allTotal = total + weight;
+      return double.parse(
+          allTotal.toStringAsFixed(2)); // Fix: Convert back to double
+    });
+  }
+
+  Map<String, double> calculateWeightPerType(
+      List<Map<String, dynamic>> fertilizers) {
+    return fertilizers.fold(<String, double>{}, (map, fertilizer) {
+      String type = fertilizer['Type']?.toString() ?? "Unknown";
+      double weight = (fertilizer['Weight (grams)'] ?? 0).toDouble();
+      map[type] = double.parse(((map[type] ?? 0) + weight).toStringAsFixed(2));
+      return map;
+    });
+  }
 }
