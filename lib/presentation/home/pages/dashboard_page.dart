@@ -76,10 +76,9 @@ class _DashboardPageState extends State<DashboardPage> {
         },
         children: _pages,
       ), // Menampilkan halaman sesuai index
-
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.transparent, // Warna navbar
+          color: Colors.transparent, // Warna navbar tetap transparan
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1), // Warna shadow
@@ -89,35 +88,35 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ],
         ),
-        child: CurvedNavigationBar(
-          backgroundColor: Colors
-              .transparent, // Background transparan agar menyatu dengan UI
-          color: Colors.white, // Warna navbar putih
-          buttonBackgroundColor:
-              Color(0xFF1FCC79), // Warna latar ikon aktif hijau
-          animationDuration: Duration(milliseconds: 300),
-          height: 60,
-          index: _selectedIndex,
-
-          items: [
-            Icon(Icons.home,
-                size: 30,
-                color: _selectedIndex == 0
-                    ? Colors.white
-                    : Color(0xFFA0A0A0)), // Ikon home
-            Icon(Icons.calculate,
-                size: 30,
-                color: _selectedIndex == 1
-                    ? Colors.white
-                    : Color(0xFFA0A0A0)), // Ikon user
-            Icon(Icons.person,
-                size: 30,
-                color: _selectedIndex == 2
-                    ? Colors.white
-                    : Color(0xFFA0A0A0)), // Ikon user
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Agar tidak mengambil seluruh layar
+          children: [
+            CurvedNavigationBar(
+              backgroundColor:
+                  Colors.transparent, // Tidak mengubah warna transparan
+              color: Color(0xFF1FCC79), // Warna putih navbar
+              buttonBackgroundColor:
+                  Color(0xFF1FCC79), // Warna latar ikon aktif hijau
+              animationDuration: Duration(milliseconds: 300),
+              height: 75, // Ketinggian navbar
+              index: _selectedIndex,
+              items: [
+                Icon(Icons.home,
+                    size: 30,
+                    color: _selectedIndex == 0 ? Colors.white : Colors.white),
+                Icon(Icons.calculate,
+                    size: 30,
+                    color: _selectedIndex == 1 ? Colors.white : Colors.white),
+                Icon(Icons.person,
+                    size: 30,
+                    color: _selectedIndex == 2 ? Colors.white : Colors.white),
+              ],
+              onTap: _onItemTapped,
+            ),
+            SizedBox(
+                height: 46,
+                child: Container(color: Colors.white)), // Area putih tambahan
           ],
-
-          onTap: _onItemTapped,
         ),
       ),
     );
@@ -134,131 +133,187 @@ class HomePage extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-        body: SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 50),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Header(),
-          const SizedBox(height: 20),
-          InkWell(
-            onTap: () => context.push(const CalculatorPage()),
-            child: NutritionCalculatorCard(),
-          ),
-          const SizedBox(height: 20),
-          WeatherCard(),
-          const SizedBox(height: 20),
-          // Daftar card dalam bentuk grid responsif
-          MenuCard(),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Text(
-                'Artikel Terbaru',
-                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                      fontSize: screenWidth * 0.05,
-                    ),
-              ),
-              const Spacer(),
-              InkWell(
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const AllArticlesScreen()));
-                },
-                child: Text(
-                  'Lihat Semua',
-                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        fontSize: screenWidth * 0.04,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header tetap tanpa padding
+            Header(),
+
+            // Bagian konten dengan efek padding negatif
+            Transform.translate(
+              offset: const Offset(0, -90), // Geser ke atas sebesar 20 pixel
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // InkWell dengan efek padding negatif agar latar belakangnya menembus
+                    Transform.translate(
+                      offset: const Offset(0, -20), // Geser ke atas
+                      child: InkWell(
+                        onTap: () => context.push(const CalculatorPage()),
+                        child: NutritionCalculatorCard(),
                       ),
+                    ),
+
+                    const SizedBox(height: 1),
+                    WeatherCard(),
+                    const SizedBox(height: 20),
+                    MenuCard(),
+                    const SizedBox(height: 20),
+
+                    // Bagian Artikel
+                    Row(
+                      children: [
+                        Text(
+                          'Artikel Terbaru',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium!
+                              .copyWith(
+                                fontSize:
+                                    MediaQuery.of(context).size.width * 0.05,
+                              ),
+                        ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AllArticlesScreen()),
+                            );
+                          },
+                          child: Text(
+                            'Lihat Semua',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall!
+                                .copyWith(
+                                  fontSize:
+                                      MediaQuery.of(context).size.width * 0.04,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // List Artikel
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.36,
+                      child: Consumer<ArticleProvider>(
+                        builder: (context, articleProvider, child) {
+                          if (articleProvider.isLoading) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          if (articleProvider.articles.isEmpty) {
+                            return const Center(
+                                child: Text("Tidak ada artikel tersedia"));
+                          }
+                          return ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: articleProvider.articles.length,
+                            itemBuilder: (context, index) {
+                              final article = articleProvider.articles[index];
+
+                              return GestureDetector(
+                                onTap: () => context.push(
+                                    DetailArticlePage(artikelId: article.id)),
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.9,
+                                  margin: const EdgeInsets.only(
+                                      left: 5, right: 20, top: 20, bottom: 20),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? AppColors.card
+                                        : bgcard,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: Colors.black.withOpacity(0.1)),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 5,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Gambar Artikel
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            top: 10,
+                                            left: 10,
+                                            right: 10), // Jarak gambar
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                                color: Colors.black
+                                                    .withOpacity(0.1),
+                                                width:
+                                                    1.5), // Border warna merah
+                                            borderRadius: BorderRadius.circular(
+                                                15), // Radius border
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                                12), // Radius sedikit lebih kecil agar border terlihat
+                                            child: Image.network(
+                                              article.image ??
+                                                  'https://via.placeholder.com/300x120',
+                                              width: double.infinity,
+                                              height: 150,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      Padding(
+                                        padding: const EdgeInsets.all(15),
+                                        child: Text(
+                                          article.name,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium!
+                                              .copyWith(
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.04,
+                                              ),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SpaceHeight(10),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.36,
-            child: Consumer<ArticleProvider>(
-              builder: (context, articleProvider, child) {
-                if (articleProvider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (articleProvider.articles.isEmpty) {
-                  return const Center(
-                      child: Text("Tidak ada artikel tersedia"));
-                }
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: articleProvider.articles.length,
-                  itemBuilder: (context, index) {
-                    final article = articleProvider.articles[index];
-
-                    return GestureDetector(
-                      onTap: () => context
-                          .push(DetailArticlePage(artikelId: article.id)),
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.9,
-                        margin: const EdgeInsets.only(
-                            left: 5, right: 20, top: 20, bottom: 20),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.card
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border:
-                              Border.all(color: Colors.black.withOpacity(0.1)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 5,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Gambar Artikel
-                            ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                topRight: Radius.circular(20),
-                              ),
-                              child: Image.network(
-                                article.image ??
-                                    'https://via.placeholder.com/300x120',
-                                width: double.infinity,
-                                height: 150,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Text(
-                                article.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                      fontSize:
-                                          MediaQuery.of(context).size.width *
-                                              0.04,
-                                    ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
             ),
-          ),
-          const SizedBox(height: 20)
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 }

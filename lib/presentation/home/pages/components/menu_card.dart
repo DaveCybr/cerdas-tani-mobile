@@ -61,8 +61,8 @@ class MenuCard extends StatelessWidget {
                     ),
                   );
                 },
-                title: 'Channel YouTube',
-                image: Image.asset("assets/images/yt-icon.png"),
+                title: 'YouTube',
+                image: Image.asset("assets/images/yt-vector.png"),
               ),
             ),
           ],
