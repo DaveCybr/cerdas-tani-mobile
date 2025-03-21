@@ -2,6 +2,7 @@ import 'package:fertilizer_calculator/core/components/space.dart';
 import 'package:fertilizer_calculator/core/constans/colors.dart';
 import 'package:fertilizer_calculator/core/extensions/build_context_ext.dart';
 import 'package:fertilizer_calculator/presentation/auth/pages/login_page.dart';
+import 'package:fertilizer_calculator/presentation/user/pages/change_password.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -151,11 +152,9 @@ class UserPage extends StatelessWidget {
                     const SizedBox(height: 20), // Jarak antara tombol
                     InkWell(
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Coming Soon"),
-                            duration: Duration(seconds: 2),
-                          ),
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                              builder: (context) => const ChangePassword()),
                         );
                       },
                       child: Container(
