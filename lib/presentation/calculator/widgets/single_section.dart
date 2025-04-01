@@ -40,9 +40,8 @@ class DualSection<T1, T2> extends StatelessWidget {
           }
         };
 
-        // Default keys untuk makro dan mikro
         const defaultMacroKeys = {
-          "N": "Nitrat",
+          "N": "Nitrogen",
           "P": "Posphor",
           "K": "Kalium",
           "Mg": "Magnesium",
@@ -59,10 +58,8 @@ class DualSection<T1, T2> extends StatelessWidget {
           "Mo": "Molibdenum"
         };
 
-        // Map untuk menyimpan data gabungan target & result
         Map<String, Map<String, dynamic>> mergedNutrients = {};
 
-        // Ambil target & result langsung dari macro dan micro
         final macroTarget =
             Map<String, dynamic>.from(selectedNutrients1['macro'] ?? {});
         final microTarget =
@@ -72,7 +69,6 @@ class DualSection<T1, T2> extends StatelessWidget {
         final microResult =
             Map<String, dynamic>.from(selectedNutrients2['micro'] ?? {});
 
-        // Gabungkan target dan result ke dalam satu map
         for (var entry in defaultMacroKeys.entries) {
           mergedNutrients[entry.value] = {
             "target": macroTarget[entry.key] ?? 0,
@@ -86,6 +82,18 @@ class DualSection<T1, T2> extends StatelessWidget {
             "result": microResult[entry.key] ?? 0,
           };
         }
+
+        double totalTargetPPM = mergedNutrients.values.fold(
+            0.0,
+            (sum, item) =>
+                sum +
+                (double.tryParse(item['target']?.toString() ?? '0') ?? 0.0));
+
+        double totalResultPPM = mergedNutrients.values.fold(
+            0.0,
+            (sum, item) =>
+                sum +
+                (double.tryParse(item['result']?.toString() ?? '0') ?? 0.0));
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +145,7 @@ class DualSection<T1, T2> extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             SizedBox(
-              height: 350, // Tentukan tinggi agar ListView bisa muncul
+              height: 350,
               child: ListView.builder(
                 itemCount: mergedNutrients.length,
                 physics: const NeverScrollableScrollPhysics(),
@@ -152,7 +160,7 @@ class DualSection<T1, T2> extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            key, // Nama elemen (N, P, K, Fe, dll.)
+                            key,
                             style: const TextStyle(fontSize: 13),
                           ),
                         ),
@@ -180,6 +188,51 @@ class DualSection<T1, T2> extends StatelessWidget {
                     ),
                   );
                 },
+              ),
+            ),
+            // 🔥 Tambahkan baris total di bawah tabel
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300], // Warna latar belakang untuk total
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        "Total PPM",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        totalTargetPPM.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        totalResultPPM.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

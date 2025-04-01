@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fertilizer_calculator/core/assets/assets.gen.dart';
-import 'package:get_storage/get_storage.dart';
 
 class Header extends StatelessWidget {
   @override

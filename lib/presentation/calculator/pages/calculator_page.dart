@@ -161,7 +161,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
                   ),
                   child: Row(
                     children: [
-                      const SizedBox(width: 12),
                       // Nama tanaman & informasi pupuk
                       Expanded(
                         child: Column(

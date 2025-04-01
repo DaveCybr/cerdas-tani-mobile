@@ -1,14 +1,211 @@
-import 'package:fertilizer_calculator/core/components/space.dart';
+import 'dart:io';
+
+import 'package:fertilizer_calculator/presentation/auth/provider/user_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:fertilizer_calculator/core/constans/colors.dart';
-import 'package:fertilizer_calculator/core/extensions/build_context_ext.dart';
 import 'package:fertilizer_calculator/presentation/auth/pages/login_page.dart';
 import 'package:fertilizer_calculator/presentation/user/provider/theme_provider.dart';
-import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:provider/provider.dart';
 
 class UserPage extends StatelessWidget {
   const UserPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        title: Text(
+          "My Profile",
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(25),
+        child: ListView(
+          physics: const BouncingScrollPhysics(),
+          children: const [
+            ProfileHeader(),
+            SizedBox(height: 20),
+            ProfileSettings(),
+            SizedBox(height: 20),
+            LogoutButton(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => _pickImage(context, userProvider),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                userProvider.avatar.isNotEmpty
+                    ? userProvider.avatar
+                    : "https://via.placeholder.com/60",
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  userProvider.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  userProvider.email,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          // ElevatedButton(
+          //   onPressed: () => _showEditProfileDialog(context, userProvider),
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: AppColors.primary,
+          //     shape: RoundedRectangleBorder(
+          //       borderRadius: BorderRadius.circular(20),
+          //     ),
+          //   ),
+          //   child: Text(
+          //     "Ubah",
+          //     style: Theme.of(context).textTheme.bodyMedium,
+          //   ),
+          // ),
+        ],
+      ),
+    );
+  }
+
+  void _pickImage(BuildContext context, UserProvider userProvider) async {
+    final picker = ImagePicker();
+    final XFile? pickedFile =
+        await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      await userProvider.updateAvatar(pickedFile.path);
+    }
+  }
+
+  void _showEditProfileDialog(BuildContext context, UserProvider userProvider) {
+    TextEditingController nameController =
+        TextEditingController(text: userProvider.name);
+
+    String avatarUrl = userProvider.avatar; // Avatar saat ini
+    File? _imageFile;
+
+    Future<void> _pickImage() async {
+      final picker = ImagePicker();
+      final XFile? pickedFile =
+          await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        _imageFile = File(pickedFile.path);
+        avatarUrl = _imageFile!.path; // Tampilkan gambar yang baru dipilih
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Edit Profile"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  await _pickImage();
+                  (context as Element)
+                      .markNeedsBuild(); // Refresh dialog setelah memilih gambar
+                },
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundImage: avatarUrl.isNotEmpty
+                      ? NetworkImage(avatarUrl)
+                      : const AssetImage("assets/default_avatar.png")
+                          as ImageProvider,
+                  child: const Align(
+                    alignment: Alignment.bottomRight,
+                    child:
+                        Icon(Icons.camera_alt, size: 20, color: Colors.black),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: "Nama Anda",
+                  fillColor: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Update nama
+                await userProvider.updateProfile(nameController.text);
+
+                // Update avatar jika ada gambar baru
+                if (_imageFile != null) {
+                  String newAvatarUrl =
+                      await userProvider.uploadImageToFirebase(_imageFile!);
+                  await userProvider.updateAvatar(newAvatarUrl);
+                }
+
+                Navigator.pop(context);
+              },
+              child: const Text("Simpan"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class ProfileSettings extends StatelessWidget {
+  const ProfileSettings({super.key});
 
   void _showThemeDialog(BuildContext context) {
     showDialog(
@@ -54,74 +251,91 @@ class UserPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Scaffold(
-      body: ListView(
-        physics: const BouncingScrollPhysics(),
+    return Container(
+      child: Column(
         children: [
-          Container(
-            padding:
-                EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.01),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Column(
-                children: [
-                  const Center(
-                    child: Text(
-                      'Lainnya',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+          ListTile(
+            title: Text(
+              'Settings',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            contentPadding: EdgeInsets.all(0),
+            // trailing: Switch(
+            //   // value: Provider.of<ThemeProvider>(context).isDarkMode,
+            //   // onChanged: (value) {
+            //   //   Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            //   // },
+            // ),
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.nightlight_round,
+              color: AppColors.disabled,
+            ),
+            title: Text(
+              'Night Mode',
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    color: AppColors.disabled,
                   ),
-                  const SpaceHeight(25),
-                  InkWell(
-                    onTap: () async {
-                      await GetStorage().erase();
-                      context.pushReplacement(const LoginPage());
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.card
-                            : Colors.white,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(8),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.logout_outlined,
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : AppColors.card,
-                              ),
-                              const SizedBox(width: 10),
-                              const Text(
-                                "Keluar",
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+            ),
+            contentPadding: EdgeInsets.all(0),
+            // trailing: Switch(
+            //   // value: Provider.of<ThemeProvider>(context).isDarkMode,
+            //   // onChanged: (value) {
+            //   //   Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            //   // },
+            // ),
+          ),
+          Divider(color: Colors.grey[300])
+        ],
+      ),
+    );
+  }
+}
+
+class LogoutButton extends StatelessWidget {
+  const LogoutButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      child: InkWell(
+        onTap: () async {
+          await GetStorage().erase();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.card
+                : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.logout_outlined,
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Logout",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
-            ),
-          )
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
