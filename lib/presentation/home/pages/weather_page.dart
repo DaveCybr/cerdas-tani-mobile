@@ -28,27 +28,25 @@ class Weather {
 
   factory Weather.fromJson(Map<String, dynamic> json) {
     List<Map<String, dynamic>> forecastData =
-        (json["daily"] as List).map((day) {
-      String dayName = DateFormat('EEEE', 'id_ID')
-          .format(DateTime.fromMillisecondsSinceEpoch(day["dt"] * 1000));
+        (json["forecast"]["forecastday"] as List).map((day) {
+      String dayName =
+          DateFormat('EEEE', 'id_ID').format(DateTime.parse(day["date"]));
       return {
         "day": dayName,
-        "icon":
-            "https://openweathermap.org/img/wn/${day["weather"][0]["icon"]}.png",
-        "temp": day["temp"]["day"],
-        "condition": day["weather"][0]["description"],
+        "icon": "https:${day["day"]["condition"]["icon"]}",
+        "temp": day["day"]["avgtemp_c"],
+        "condition": day["day"]["condition"]["text"],
       };
     }).toList();
 
     return Weather(
-      city: json["name"],
-      country: json["sys"]["country"],
-      temperature: json["main"]["temp"],
-      condition: json["weather"][0]["description"],
-      iconUrl:
-          "https://openweathermap.org/img/wn/${json["weather"][0]["icon"]}.png",
-      windSpeed: json["wind"]["speed"],
-      humidity: json["main"]["humidity"],
+      city: json["location"]["name"],
+      country: json["location"]["country"],
+      temperature: json["current"]["temp_c"],
+      condition: json["current"]["condition"]["text"],
+      iconUrl: "https:${json["current"]["condition"]["icon"]}",
+      windSpeed: json["current"]["wind_kph"],
+      humidity: json["current"]["humidity"],
       forecast: forecastData,
     );
   }
@@ -56,13 +54,15 @@ class Weather {
 
 class WeatherService {
   final String apiKey =
-      "febe39931a5edb8c05a9201a6859c54c"; // Gantilah dengan API key Anda
-  final String baseUrl = "https://api.openweathermap.org/data/2.5/onecall";
+      "a6439437add444549d6125856253103"; // Ganti dengan API key WeatherAPI kamu
+  final String baseUrl = "https://api.weatherapi.com/v1/forecast.json";
 
   Future<Weather> fetchWeather(double lat, double lon) async {
     final url = Uri.parse(
-        "$baseUrl?lat=$lat&lon=$lon&exclude=hourly,minutely&units=metric&lang=id&appid=$apiKey");
+        "$baseUrl?key=$apiKey&q=$lat,$lon&days=5&aqi=no&alerts=no&lang=id");
+
     print("Request URL: $url");
+
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
