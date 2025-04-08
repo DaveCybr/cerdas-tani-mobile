@@ -1,12 +1,14 @@
+import 'package:fertilizer_calculator/presentation/auth/provider/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fertilizer_calculator/core/assets/assets.gen.dart';
+import 'package:provider/provider.dart';
 
 class Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final userName = user?.displayName ?? 'Pengguna';
+    final userProvider = Provider.of<UserProvider>(context);
+    final userName = userProvider?.name ?? 'Pengguna';
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

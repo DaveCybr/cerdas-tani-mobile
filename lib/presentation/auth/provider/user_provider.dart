@@ -1,9 +1,7 @@
-import 'dart:io';
-
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -11,22 +9,35 @@ class UserProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GetStorage _storage = GetStorage();
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   User? _user;
-  User? get user => _user; // Getter untuk user
+  Map<String, dynamic>? _userData;
 
   UserProvider() {
     _user = _auth.currentUser;
+    if (_user != null) {
+      _loadUserData();
+    }
   }
 
+  User? get user => _user;
   bool get isLoggedIn => _user != null;
 
-  String get name => _user?.displayName ?? "User";
-  String get avatar => _user?.photoURL ?? "";
+  String get name => _userData?['name'] ?? _user?.displayName ?? "User";
+  String get avatar => _userData?['avatar'] ?? _user?.photoURL ?? "";
   String get email => _user?.email ?? "";
 
-  // Login Google
+  Future<void> _loadUserData() async {
+    if (_user != null) {
+      final doc = await _firestore.collection('users').doc(_user!.uid).get();
+      if (doc.exists) {
+        _userData = doc.data();
+        notifyListeners();
+      }
+    }
+  }
+
   Future<User?> signInWithGoogle(BuildContext context) async {
     try {
       await _googleSignIn.signOut();
@@ -49,9 +60,10 @@ class UserProvider with ChangeNotifier {
       await _firestore.collection('users').doc(_user!.uid).set({
         "name": _user?.displayName,
         "email": _user?.email,
-        "photoUrl": _user?.photoURL,
+        "avatar": _user?.photoURL,
       }, SetOptions(merge: true));
 
+      await _loadUserData();
       notifyListeners();
       return _user;
     } catch (e) {
@@ -60,61 +72,83 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  // **FUNGSI EDIT PROFIL**
-  Future<void> updateProfile(String name) async {
+  Future<User?> signUpWithEmail({
+    required String email,
+    required String password,
+  }) async {
     try {
-      await _user?.updateDisplayName(name);
-      await _firestore.collection('users').doc(_user!.uid).update({
-        "name": name,
+      // Signup ke Firebase Authentication
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      _user = userCredential.user;
+
+      // Simpan data awal user ke Firestore
+      await _firestore.collection('users').doc(_user!.uid).set({
+        'email': email,
+        'name': 'User',
+        'photoUrl': '',
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
-      _user = _auth.currentUser;
-      notifyListeners(); // UPDATE UI
+      notifyListeners();
+      return _user;
     } catch (e) {
-      debugPrint("Error updating profile: $e");
+      debugPrint("Error Sign Up: $e");
+      rethrow; // biar error-nya bisa ditangani di UI
     }
   }
 
-  Future<String> uploadImageToFirebase(File imageFile) async {
-    try {
-      final storageRef = FirebaseStorage.instance.ref();
-      final imageRef = storageRef
-          .child("avatars/${DateTime.now().millisecondsSinceEpoch}.jpg");
+  Future<void> updateProfile({
+    required String name,
+    Uint8List? newAvatarBytes,
+  }) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
 
-      await imageRef.putFile(imageFile);
-      return await imageRef.getDownloadURL(); // Dapatkan URL gambar baru
-    } catch (e) {
-      debugPrint("Error uploading image: $e");
-      return "";
-    }
-  }
+    String avatarUrl = avatar;
 
-  Future<void> updateAvatar(String newAvatar) async {
-    try {
-      if (_user != null) {
-        // Update photoURL di Firebase Authentication
-        await _user!.updatePhotoURL(newAvatar);
+    if (newAvatarBytes != null) {
+      try {
+        final ref = _storage.ref().child('avatars/$uid.jpg');
 
-        // Update Firestore
-        await _firestore.collection('users').doc(_user!.uid).update({
-          "photoUrl": newAvatar,
-        });
+        // Upload data ke Firebase Storage
+        final uploadTask = await ref.putData(
+          newAvatarBytes,
+          SettableMetadata(contentType: 'image/jpeg'),
+        );
 
-        // Refresh user data
-        _user = _auth.currentUser;
-        notifyListeners(); // Update UI
+        // Pastikan file sudah berhasil di-upload sebelum ambil URL
+        avatarUrl = await ref.getDownloadURL();
+      } catch (e) {
+        debugPrint("Upload avatar failed: $e");
+        rethrow;
       }
-    } catch (e) {
-      debugPrint("Error updating avatar: $e");
     }
+
+    // Update ke Firestore
+    await _firestore.collection('users').doc(uid).update({
+      'name': name,
+      'avatar': avatarUrl,
+      'photoUrl': avatarUrl,
+    });
+
+    // Update local state dan notify
+    _userData ??= {};
+    _userData!['name'] = name;
+    _userData!['avatar'] = avatarUrl;
+    _userData!['photoUrl'] = avatarUrl;
+    notifyListeners();
   }
 
-  // Logout
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
-    await _storage.erase();
     _user = null;
+    _userData = null;
     notifyListeners();
   }
 }

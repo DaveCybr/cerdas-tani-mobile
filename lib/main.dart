@@ -8,6 +8,7 @@ import 'package:fertilizer_calculator/presentation/calculator/provider/recipe_pr
 import 'package:fertilizer_calculator/presentation/history/provider/history_provider.dart';
 import 'package:fertilizer_calculator/presentation/home/pages/splash_page.dart';
 import 'package:fertilizer_calculator/presentation/home/provider/article_provider.dart';
+import 'package:fertilizer_calculator/presentation/user/provider/profile_provider.dart';
 import 'package:fertilizer_calculator/presentation/user/provider/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => CalculatorProvider()),
         ChangeNotifierProvider(create: (_) => ArticleProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => CalculateProvider()),
         ChangeNotifierProvider(
             create: (_) => HistoryProvider()..loadHistories()),
@@ -61,6 +63,11 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           themeMode: themeProvider.currentTheme,
           theme: ThemeData(
+            textSelectionTheme: const TextSelectionThemeData(
+              cursorColor: Colors.black, // warna kursor (line)
+              selectionColor: Colors.grey, // warna teks yang di-select
+              selectionHandleColor: Colors.black, // warna tetesan itu
+            ),
             textTheme: TextTheme(
               //this Font we will use later 'H1'
 

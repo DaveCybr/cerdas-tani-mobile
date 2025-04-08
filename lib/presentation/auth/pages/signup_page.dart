@@ -1,4 +1,5 @@
 import 'package:fertilizer_calculator/presentation/auth/pages/login_page.dart';
+import 'package:fertilizer_calculator/presentation/auth/provider/user_provider.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_back_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_button.dart';
 import 'package:fertilizer_calculator/presentation/auth/widgets/custom_texfield.dart';
@@ -7,6 +8,7 @@ import 'package:fertilizer_calculator/presentation/home/pages/dashboard_page.dar
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constans/colors.dart';
 
 class SignupPage extends StatefulWidget {
@@ -64,13 +66,14 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _signUp() async {
     if (!key.currentState!.validate()) return;
 
-    setState(() => isLoading = true); // Mulai loading
+    setState(() => isLoading = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 2)); // Simulasi request API
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: _emailController.text, password: _passwordController.text);
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await userProvider.signUpWithEmail(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
 
       showCustomDialog(
         context: context,
@@ -84,16 +87,15 @@ class _SignupPageState extends State<SignupPage> {
         },
       );
     } catch (e) {
-      // Handle error
       showCustomDialog(
         context: context,
         isSuccess: false,
-        message: "Email is already registered",
+        message: "Email is already registered or signup failed",
         onConfirm: () {},
       );
     }
 
-    setState(() => isLoading = false); // Selesai loading
+    setState(() => isLoading = false);
   }
 
   @override

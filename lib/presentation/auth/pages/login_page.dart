@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fertilizer_calculator/core/assets/assets.gen.dart';
 import 'package:fertilizer_calculator/core/constans/colors.dart';
 import 'package:fertilizer_calculator/presentation/auth/pages/password_recovery_page.dart';
@@ -60,9 +61,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-      if (googleUser == null) {
-        return;
-      }
+      if (googleUser == null) return;
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -74,14 +73,37 @@ class _LoginPageState extends State<LoginPage> {
 
       final UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
+      final user = userCredential.user;
 
-      box.write('google_account_id', userCredential.user?.uid);
+      if (user != null) {
+        // Simpan UID ke lokal storage
+        box.write('google_account_id', user.uid);
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const DashboardPage()),
-        (route) => false,
-      );
+        // Simpan ke Firestore (kalau belum ada)
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (!userDoc.exists) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .set({
+            "name": user.displayName,
+            "email": user.email,
+            "photoUrl": user.photoURL,
+            "createdAt": FieldValue.serverTimestamp(),
+          });
+        }
+
+        // Navigasi ke Dashboard
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardPage()),
+          (route) => false,
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Google Sign-In failed: $e")),
