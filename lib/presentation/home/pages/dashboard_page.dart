@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:fertilizer_calculator/core/assets/assets.gen.dart';
 import 'package:fertilizer_calculator/core/components/space.dart';
@@ -10,6 +12,8 @@ import 'package:fertilizer_calculator/presentation/home/pages/components/menu_ca
 import 'package:fertilizer_calculator/presentation/home/pages/components/nutrition_calculator_card.dart';
 import 'package:fertilizer_calculator/presentation/home/pages/components/wheather_card.dart';
 import 'package:fertilizer_calculator/presentation/home/pages/detail_article_page.dart';
+import 'package:fertilizer_calculator/presentation/home/pages/modules/components/module_all.dart';
+import 'package:fertilizer_calculator/presentation/home/pages/modules/components/module_list.dart';
 import 'package:fertilizer_calculator/presentation/home/provider/article_provider.dart';
 // import 'package:fertilizer_calculator/presentation/home/pages/home_page.dart';
 import 'package:fertilizer_calculator/presentation/user/pages/user_page.dart';
@@ -150,7 +154,36 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 20),
           // Daftar card dalam bentuk grid responsif
           MenuCard(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Modul',
+                    style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                          fontSize: screenWidth * 0.05,
+                        ),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const AllModuleScreen()));
+                    },
+                    child: Text(
+                      'Lihat Semua',
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                            fontSize: screenWidth * 0.04,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+              ModuleList(),
+            ],
+          ),
           Row(
             children: [
               Text(
@@ -188,7 +221,7 @@ class HomePage extends StatelessWidget {
                 }
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: articleProvider.articles.length,
+                  itemCount: min(articleProvider.articles.length, 5),
                   itemBuilder: (context, index) {
                     final article = articleProvider.articles[index];
 
@@ -196,7 +229,7 @@ class HomePage extends StatelessWidget {
                       onTap: () => context
                           .push(DetailArticlePage(artikelId: article.id)),
                       child: Container(
-                        width: MediaQuery.of(context).size.width * 0.9,
+                        width: MediaQuery.of(context).size.width * 0.87,
                         margin: const EdgeInsets.only(
                             left: 5, right: 20, top: 20, bottom: 20),
                         decoration: BoxDecoration(

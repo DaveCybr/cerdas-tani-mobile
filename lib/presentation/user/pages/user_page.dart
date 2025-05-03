@@ -22,10 +22,10 @@ class UserPage extends StatelessWidget {
         padding: const EdgeInsets.all(25),
         child: ListView(
           physics: const BouncingScrollPhysics(),
-          children: const [
+          children: [
             ProfileHeader(),
             SizedBox(height: 20),
-            ProfileSettings(),
+            Divider(color: Colors.grey[300]),
             SizedBox(height: 20),
             LogoutButton(),
           ],

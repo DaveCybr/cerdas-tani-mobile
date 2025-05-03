@@ -87,22 +87,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      // ClipRRect(
-                      //   borderRadius: const BorderRadius.all(
-                      //     Radius.circular(12),
-                      //   ),
-                      //   child: Container(
-                      //       height: 40,
-                      //       width: 40,
-                      //       color: AppColors.darkgreen,
-                      //       child: Icon(
-                      //         Icons.notifications,
-                      //         color: Theme.of(context).brightness ==
-                      //                 Brightness.dark
-                      //             ? AppColors.card
-                      //             : Colors.white,
-                      //       )),
-                      // )
                     ],
                   ),
                   const SpaceHeight(20),
@@ -268,6 +252,77 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SpaceHeight(10),
+                  SizedBox(
+                    height: 210,
+                    child: Consumer<ArticleProvider>(
+                      builder: (context, articleProvider, child) {
+                        if (articleProvider.isLoading) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+
+                        if (articleProvider.articles.isEmpty) {
+                          return const Center(
+                              child: Text("Tidak ada artikel tersedia"));
+                        }
+
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: articleProvider.articles.length,
+                          itemBuilder: (context, index) {
+                            final article = articleProvider.articles[index];
+
+                            return GestureDetector(
+                              onTap: () => context.push(
+                                  DetailArticlePage(artikelId: article.id)),
+                              child: Container(
+                                width: 300,
+                                margin: const EdgeInsets.only(right: 15),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.card
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      height: 120,
+                                      decoration: BoxDecoration(
+                                        borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(11),
+                                          topRight: Radius.circular(11),
+                                        ),
+                                        image: DecorationImage(
+                                          image: NetworkImage(article.image ??
+                                              'https://via.placeholder.com/300x120'), // Gambar artikel
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(9.0),
+                                      child: Text(
+                                        article.name, // Judul artikel
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        maxLines: 3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
                   SizedBox(
                     height: 210,
                     child: Consumer<ArticleProvider>(

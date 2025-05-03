@@ -295,8 +295,7 @@ class _RecipePageState extends State<RecipePage> {
                     child: Text(
                       'Nutrisi Makro',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                          fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ),
@@ -352,12 +351,8 @@ class _RecipePageState extends State<RecipePage> {
                                           isDense: true,
                                         ),
                                         inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly, // Hanya angka
                                           LengthLimitingTextInputFormatter(
-                                              4), // Maksimal 4 digit (1000)
-                                          FilteringTextInputFormatter.allow(
-                                              RegExp(r'^(1000|[0-9]{1,3})$')),
+                                              6), // Maksimal 4 digit (1000)
                                         ],
                                       )
                                     : Text(value
@@ -382,8 +377,7 @@ class _RecipePageState extends State<RecipePage> {
                     child: Text(
                       'Nutrisi Mikro',
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                          fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ),
@@ -446,12 +440,8 @@ class _RecipePageState extends State<RecipePage> {
                                           isDense: true,
                                         ),
                                         inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly, // Hanya angka
                                           LengthLimitingTextInputFormatter(
-                                              4), // Maksimal 4 digit (1000)
-                                          FilteringTextInputFormatter.allow(
-                                              RegExp(r'^(1000|[0-9]{1,3})$')),
+                                              6), // Maksimal 4 digit (1000)
                                         ],
                                       )
                                     : Text(value

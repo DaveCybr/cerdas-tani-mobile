@@ -6,6 +6,7 @@ import 'package:fertilizer_calculator/presentation/calculator/provider/calculato
 import 'package:fertilizer_calculator/presentation/calculator/provider/fertilizer_provider.dart';
 import 'package:fertilizer_calculator/presentation/calculator/provider/recipe_provider.dart';
 import 'package:fertilizer_calculator/presentation/history/provider/history_provider.dart';
+import 'package:fertilizer_calculator/presentation/home/pages/modules/provider/module_provider.dart';
 import 'package:fertilizer_calculator/presentation/home/pages/splash_page.dart';
 import 'package:fertilizer_calculator/presentation/home/provider/article_provider.dart';
 import 'package:fertilizer_calculator/presentation/user/provider/profile_provider.dart';
@@ -27,6 +28,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => RecipeProvider()..loadRecipes()),
         ChangeNotifierProvider(create: (_) => FertilizerProvider()),
+        ChangeNotifierProvider(create: (_) => ModuleProvider()..fetchModules()),
         ChangeNotifierProvider(create: (_) => CalculatorProvider()),
         ChangeNotifierProvider(create: (_) => ArticleProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
