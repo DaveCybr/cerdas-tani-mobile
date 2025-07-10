@@ -5,6 +5,7 @@ import 'package:fertilizer_calculator/presentation/history/pages/history_page.da
 import 'package:fertilizer_calculator/presentation/home/widgets/card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:fertilizer_calculator/core/extensions/build_context_ext.dart';
+import 'package:fertilizer_calculator/presentation/chat/chat_page.dart';
 
 class MenuCard extends StatelessWidget {
   @override
