@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -13,6 +15,10 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final box = GetStorage();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String? currentUserId;
+
   String botTypingText = '';
   bool isTyping = false;
   bool showImagePreview = false;
@@ -23,6 +29,41 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<Map<String, dynamic>> messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatusAndLoadChats();
+  }
+
+  void _checkLoginStatusAndLoadChats() {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      currentUserId = user.uid;
+      print("✅ Login terdeteksi. UID: $currentUserId");
+      _loadChatHistory();
+    } else {
+      messages.clear();
+      currentUserId = null;
+      print("❌ Tidak ada user yang login. UID: null");
+    }
+  }
+
+  void _loadChatHistory() {
+    final stored = box.read('chat_history_$currentUserId');
+    if (stored != null && stored is List) {
+      messages.clear();
+      messages.addAll(List<Map<String, dynamic>>.from(stored));
+      setState(() {});
+    }
+  }
+
+  void _saveChatHistory() {
+    if (currentUserId != null) {
+      box.write('chat_history_$currentUserId', messages);
+    }
+  }
 
   List<Map<String, dynamic>> get filteredMessages {
     if (_searchController.text.isEmpty) return messages;
@@ -173,7 +214,7 @@ class _ChatPageState extends State<ChatPage> {
         }
       });
     }
-
+    _saveChatHistory();
     setState(() {});
   }
 
@@ -493,6 +534,8 @@ class _ChatPageState extends State<ChatPage> {
                             .add({'type': 'received', 'text': botTypingText});
                         isTyping = false;
                         botTypingText = '';
+                        _saveChatHistory();
+
                         setState(() {});
                       }
                     },
