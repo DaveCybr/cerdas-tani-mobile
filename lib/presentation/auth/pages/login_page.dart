@@ -90,6 +90,7 @@ class _LoginPageState extends State<LoginPage> {
               .collection('users')
               .doc(user.uid)
               .set({
+            "uid": user.uid,
             "name": user.displayName,
             "email": user.email,
             "photoUrl": user.photoURL,
