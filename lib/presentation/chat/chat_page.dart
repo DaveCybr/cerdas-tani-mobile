@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http_parser/http_parser.dart'; // untuk MediaType
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -85,7 +86,7 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  Future<String?> sendMessageToAPI(String userMessage, String? imageUrl) async {
+  Future<String?> sendMessageToAPI(String userMessage, File? imageFile) async {
     const url = 'http://sirangga.satelliteorbit.cloud/api/growbot/chat';
 
     final history = messages
@@ -97,22 +98,32 @@ class _ChatPageState extends State<ChatPage> {
       };
     }).toList();
 
-    final body = {
-      'user_message': userMessage,
-      'image': imageUrl ?? '',
-      'history': history,
-    };
-
     try {
-      print('=== Mengirim ke API ===');
-      print('URL: $url');
-      print('Body: ${jsonEncode(body)}');
+      final request = http.MultipartRequest('POST', Uri.parse(url));
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
+      request.fields['user_message'] = userMessage.isEmpty ? '""' : userMessage;
+      request.fields['history'] = jsonEncode(history);
+
+      if (imageFile != null) {
+        final mimeType =
+            imageFile.path.endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+        final multipartFile = await http.MultipartFile.fromPath(
+          'image_file',
+          imageFile.path,
+          contentType: MediaType.parse(mimeType),
+        );
+
+        request.files.add(multipartFile);
+      }
+
+      print('Mengirim ke API dengan data berikut:');
+      print('user_message: ${request.fields['user_message']}');
+      print('chat_history: ${request.fields['chat_history']}');
+      print(
+          'image: ${imageFile != null ? imageFile.path : 'Tidak ada gambar'}');
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
       print('Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
@@ -121,7 +132,7 @@ class _ChatPageState extends State<ChatPage> {
         final jsonResponse = jsonDecode(response.body);
         return jsonResponse['ai_reply'];
       } else {
-        throw Exception('Server responded with code: ${response.statusCode}');
+        throw Exception('Server error: ${response.statusCode}');
       }
     } catch (e) {
       print('ERROR saat mengirim ke API: $e');
@@ -133,73 +144,30 @@ class _ChatPageState extends State<ChatPage> {
     if (_controller.text.trim().isEmpty && selectedImage == null) return;
 
     final userText = _controller.text.trim();
-    final imagePath = selectedImage?.path;
 
+    // Tambahkan pesan ke daftar message
     messages.add({
       'type': 'sent',
-      if (userText.isNotEmpty) 'text': userText,
-      if (imagePath != null) 'image': imagePath,
+      'text': userText.isEmpty ? null : userText,
+      if (selectedImage != null) 'image': selectedImage!.path,
     });
 
-    // Tambahkan loading bubble sementara
     messages.add({'type': 'loading'});
 
     setState(() {
       _controller.clear();
-      selectedImage = null;
     });
 
-    try {
-      final imageUrl = imagePath?.startsWith('http') == true ? imagePath : null;
-      final response = await sendMessageToAPI(userText, imageUrl);
+    final imageToSend = selectedImage;
+    selectedImage = null;
 
-      // Hapus loading bubble
-      messages.removeWhere((msg) => msg['type'] == 'loading');
+    final response =
+        await sendMessageToAPI(userText.isEmpty ? "" : userText, imageToSend);
 
-      if (response == null || response.trim().isEmpty) {
-        setState(() {
-          final lastSentIndex =
-              messages.lastIndexWhere((msg) => msg['type'] == 'sent');
-          if (lastSentIndex != -1) {
-            messages[lastSentIndex] = {
-              ...messages[lastSentIndex],
-              'type': 'failed',
-              'text': messages[lastSentIndex]['text'] ?? '[gambar]',
-              'originalText': userText,
-              'originalImage': imagePath,
-            };
-          }
-        });
+    messages.removeWhere((msg) => msg['type'] == 'loading');
 
-        return;
-      }
-
-      // Tambahkan typing bubble
-      messages.add({'type': 'typing', 'text': ''});
-      isTyping = true;
-      botTypingText = '';
-      setState(() {});
-
-      for (int i = 0; i < response.length; i++) {
-        await Future.delayed(const Duration(milliseconds: 5));
-        botTypingText += response[i];
-        final typingIndex =
-            messages.indexWhere((msg) => msg['type'] == 'typing');
-        if (typingIndex != -1) {
-          setState(() {
-            messages[typingIndex]['text'] = botTypingText;
-          });
-        }
-      }
-
-      messages.removeWhere((msg) => msg['type'] == 'typing');
-      messages.add({'type': 'received', 'text': botTypingText});
-
-      isTyping = false;
-      botTypingText = '';
-    } catch (e) {
-      messages.removeWhere((msg) => msg['type'] == 'loading');
-
+    if (response == null || response.trim().isEmpty) {
+      // Gagal
       setState(() {
         final lastSentIndex =
             messages.lastIndexWhere((msg) => msg['type'] == 'sent');
@@ -207,19 +175,27 @@ class _ChatPageState extends State<ChatPage> {
           messages[lastSentIndex] = {
             ...messages[lastSentIndex],
             'type': 'failed',
-            'text': messages[lastSentIndex]['text'] ?? '[gambar]',
+            'text': userText,
             'originalText': userText,
-            'originalImage': imagePath,
+            'originalImage': imageToSend?.path,
           };
         }
       });
+      return;
     }
+
+    // Sukses
+    messages.add({'type': 'received', 'text': response});
     _saveChatHistory();
+
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    bool isComposing =
+        _controller.text.trim().isNotEmpty || selectedImage != null;
+
     return Scaffold(
       backgroundColor: const Color(0xFFE9FDF0),
       body: SafeArea(
@@ -412,23 +388,51 @@ class _ChatPageState extends State<ChatPage> {
         }
 
         if (msg.containsKey('image')) {
-          final imageWidget = msg['image'].toString().startsWith('http')
-              ? Image.network(msg['image'], width: 160)
-              : Image.file(File(msg['image']), width: 160);
+          List<Widget> imageWidgets = [];
 
-          final textWidget = msg.containsKey('text')
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(msg['text']),
-                )
-              : const SizedBox.shrink();
+          if (msg['image'] is String) {
+            // Hanya satu gambar
+            final imageWidget = msg['image'].toString().startsWith('http')
+                ? Image.network(msg['image'], width: 160)
+                : Image.file(File(msg['image']), width: 160);
+
+            imageWidgets.add(
+              GestureDetector(
+                onTap: () => setState(() => openedImageUrl = msg['image']),
+                child: imageWidget,
+              ),
+            );
+          } else if (msg['image'] is List) {
+            // Beberapa gambar
+            for (var img in msg['image']) {
+              final imageWidget = img.toString().startsWith('http')
+                  ? Image.network(img, width: 160)
+                  : Image.file(File(img), width: 160);
+
+              imageWidgets.add(
+                GestureDetector(
+                  onTap: () => setState(() => openedImageUrl = img),
+                  child: imageWidget,
+                ),
+              );
+            }
+          }
+
+          final textContent = msg['text'];
+          final textWidget =
+              (textContent != null && textContent.toString().isNotEmpty)
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(textContent),
+                    )
+                  : const SizedBox.shrink();
 
           return Align(
             alignment: msg['type'] == 'sent'
                 ? Alignment.centerRight
                 : Alignment.centerLeft,
             child: Container(
-              margin: EdgeInsets.only(top: 10, bottom: 10),
+              margin: const EdgeInsets.symmetric(vertical: 10),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -438,10 +442,7 @@ class _ChatPageState extends State<ChatPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => setState(() => openedImageUrl = msg['image']),
-                    child: imageWidget,
-                  ),
+                  ...imageWidgets,
                   textWidget,
                 ],
               ),
@@ -617,32 +618,31 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildSelectedImagePreview() {
+    if (selectedImage == null) return const SizedBox.shrink();
+
     return Positioned(
       bottom: 10,
       left: 16,
       child: Stack(
+        alignment: Alignment.topRight,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.file(
               selectedImage!,
-              width: 100,
-              height: 100,
+              width: 80,
+              height: 80,
               fit: BoxFit.cover,
             ),
           ),
-          Positioned(
-            top: 2,
-            right: 2,
-            child: GestureDetector(
-              onTap: () => setState(() => selectedImage = null),
-              child: Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black54,
-                ),
-                child: const Icon(Icons.close, size: 16, color: Colors.white),
+          GestureDetector(
+            onTap: () => setState(() => selectedImage = null),
+            child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black54,
               ),
+              child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
         ],
