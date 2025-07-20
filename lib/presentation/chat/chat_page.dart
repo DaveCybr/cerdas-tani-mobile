@@ -15,11 +15,11 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final box = GetStorage();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String? currentUserId;
-
+  final ScrollController _scrollController = ScrollController();
   String botTypingText = '';
   bool isTyping = false;
   bool showImagePreview = false;
@@ -35,6 +35,24 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _checkLoginStatusAndLoadChats();
+
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeMetrics() {
+    final bottomInset = WidgetsBinding.instance.window.viewInsets.bottom;
+    if (bottomInset > 0.0) {
+      // Keyboard muncul
+      scrollToBottom();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _checkLoginStatusAndLoadChats() {
@@ -58,6 +76,7 @@ class _ChatPageState extends State<ChatPage> {
       messages.addAll(List<Map<String, dynamic>>.from(stored));
       setState(() {});
     }
+    scrollToBottom();
   }
 
   void _saveChatHistory() {
@@ -157,7 +176,7 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       _controller.clear();
     });
-
+    scrollToBottom();
     final imageToSend = selectedImage;
     selectedImage = null;
 
@@ -189,6 +208,19 @@ class _ChatPageState extends State<ChatPage> {
     _saveChatHistory();
 
     setState(() {});
+    scrollToBottom();
+  }
+
+  void scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -198,6 +230,7 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFE9FDF0),
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
@@ -208,10 +241,19 @@ class _ChatPageState extends State<ChatPage> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: TextField(
                   controller: _searchController,
+                  style: const TextStyle(color: Colors.black),
                   decoration: const InputDecoration(
                     hintText: 'Search messages...',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
+                    hintStyle: TextStyle(color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: Colors.black),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Colors.black), // border normal
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                          color: Colors.black, width: 2), // border saat focus
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -222,10 +264,10 @@ class _ChatPageState extends State<ChatPage> {
                   _buildMessageList(),
                   if (openedImageUrl != null)
                     _buildFullImagePopup(openedImageUrl!),
-                  if (selectedImage != null) _buildSelectedImagePreview(),
                 ],
               ),
             ),
+            if (selectedImage != null) _buildSelectedImagePreview(),
             _buildInputArea(),
           ],
         ),
@@ -256,7 +298,15 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           const SizedBox(width: 10),
-          const Text('GrowBOT', style: TextStyle(fontSize: 18)),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold),
+              children: parseBoldText('GrowBOT'),
+            ),
+          ),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.search),
@@ -269,6 +319,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildMessageList() {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: filteredMessages.length,
       itemBuilder: (context, index) {
@@ -382,7 +433,12 @@ class _ChatPageState extends State<ChatPage> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.green),
               ),
-              child: Text(msg['text']),
+              child: RichText(
+                text: TextSpan(
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                  children: parseBoldText(msg['text'] ?? ''),
+                ),
+              ),
             ),
           );
         }
@@ -423,8 +479,12 @@ class _ChatPageState extends State<ChatPage> {
               (textContent != null && textContent.toString().isNotEmpty)
                   ? Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(textContent),
-                    )
+                      child: RichText(
+                        text: TextSpan(
+                          style: TextStyle(fontSize: 16, color: Colors.black),
+                          children: parseBoldText(msg['text'] ?? ''),
+                        ),
+                      ))
                   : const SizedBox.shrink();
 
           return Align(
@@ -464,85 +524,100 @@ class _ChatPageState extends State<ChatPage> {
                       const Icon(Icons.error_outline, color: Colors.orange),
                       const SizedBox(width: 4),
                       Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red),
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.white,
-                        ),
-                        child: Text(msg['text'],
-                            style: const TextStyle(color: Colors.red)),
-                      ),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.red),
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white,
+                          ),
+                          child: RichText(
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.red,
+                              ),
+                              children: parseBoldText(msg['text'] ?? ''),
+                            ),
+                          )),
                     ],
                   ),
                   TextButton(
-                    onPressed: () async {
-                      final failedText = msg['originalText'] ?? '';
-                      final failedImage = msg['originalImage'];
-                      final index = messages.indexOf(msg);
+                      onPressed: () async {
+                        final failedText = msg['originalText'] ?? '';
+                        final failedImage = msg['originalImage'];
+                        final index = messages.indexOf(msg);
 
-                      if (index != -1) {
-                        setState(() {
-                          messages[index] = {
-                            'type': 'sent',
-                            if (failedText.isNotEmpty) 'text': failedText,
-                            if (failedImage != null) 'image': failedImage,
-                          };
-                          // Tambahkan loading bubble
-                          messages.insert(index + 1, {'type': 'loading'});
-                        });
-
-                        final imagePath = failedImage;
-                        final response =
-                            await sendMessageToAPI(failedText, null);
-
-                        // Hapus loading bubble
-                        messages.removeWhere((msg) => msg['type'] == 'loading');
-
-                        if (response == null || response.trim().isEmpty) {
+                        if (index != -1) {
                           setState(() {
                             messages[index] = {
-                              ...messages[index],
-                              'type': 'failed',
-                              'text': messages[index]['text'] ?? '[gambar]',
-                              'originalText': failedText,
-                              'originalImage': imagePath,
+                              'type': 'sent',
+                              if (failedText.isNotEmpty) 'text': failedText,
+                              if (failedImage != null) 'image': failedImage,
                             };
+                            // Tambahkan loading bubble
+                            messages.insert(index + 1, {'type': 'loading'});
                           });
-                          return;
-                        }
 
-                        // Tampilkan typing effect
-                        messages.add({'type': 'typing', 'text': ''});
-                        isTyping = true;
-                        botTypingText = '';
-                        setState(() {});
+                          final imagePath = failedImage;
+                          final response =
+                              await sendMessageToAPI(failedText, null);
 
-                        for (int i = 0; i < response.length; i++) {
-                          await Future.delayed(const Duration(milliseconds: 5));
-                          botTypingText += response[i];
-                          final typingIndex = messages
-                              .indexWhere((msg) => msg['type'] == 'typing');
-                          if (typingIndex != -1) {
+                          // Hapus loading bubble
+                          messages
+                              .removeWhere((msg) => msg['type'] == 'loading');
+
+                          if (response == null || response.trim().isEmpty) {
                             setState(() {
-                              messages[typingIndex]['text'] = botTypingText;
+                              messages[index] = {
+                                ...messages[index],
+                                'type': 'failed',
+                                'text': messages[index]['text'] ?? '[gambar]',
+                                'originalText': failedText,
+                                'originalImage': imagePath,
+                              };
                             });
+                            return;
                           }
+
+                          // Tampilkan typing effect
+                          messages.add({'type': 'typing', 'text': ''});
+                          isTyping = true;
+                          botTypingText = '';
+                          setState(() {});
+
+                          for (int i = 0; i < response.length; i++) {
+                            await Future.delayed(
+                                const Duration(milliseconds: 5));
+                            botTypingText += response[i];
+                            final typingIndex = messages
+                                .indexWhere((msg) => msg['type'] == 'typing');
+                            if (typingIndex != -1) {
+                              setState(() {
+                                messages[typingIndex]['text'] = botTypingText;
+                              });
+                            }
+                          }
+
+                          messages
+                              .removeWhere((msg) => msg['type'] == 'typing');
+                          messages
+                              .add({'type': 'received', 'text': botTypingText});
+                          isTyping = false;
+                          botTypingText = '';
+                          _saveChatHistory();
+
+                          setState(() {});
                         }
-
-                        messages.removeWhere((msg) => msg['type'] == 'typing');
-                        messages
-                            .add({'type': 'received', 'text': botTypingText});
-                        isTyping = false;
-                        botTypingText = '';
-                        _saveChatHistory();
-
-                        setState(() {});
-                      }
-                    },
-                    child: const Text("Ulangi",
-                        style: TextStyle(color: Colors.green)),
-                  )
+                      },
+                      child: RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.green,
+                          ),
+                          children: parseBoldText(msg['text'] ?? ''),
+                        ),
+                      ))
                 ],
               ),
             ),
@@ -565,11 +640,46 @@ class _ChatPageState extends State<ChatPage> {
                 BoxShadow(color: Colors.black12, blurRadius: 2)
               ],
             ),
-            child: Text(msg['text']),
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 16, color: Colors.black),
+                children: parseBoldText(msg['text'] ?? ''),
+              ),
+            ),
           ),
         );
       },
     );
+  }
+
+  List<InlineSpan> parseBoldText(String text) {
+    final spans = <InlineSpan>[];
+    final regex = RegExp(r'\*\*(.*?)\*\*');
+    var currentIndex = 0;
+
+    for (final match in regex.allMatches(text)) {
+      if (match.start > currentIndex) {
+        spans.add(TextSpan(
+          text: text.substring(currentIndex, match.start),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
+        ));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      ));
+      currentIndex = match.end;
+    }
+
+    if (currentIndex < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(currentIndex),
+      ));
+    }
+
+    return spans;
   }
 
   Widget _buildInputArea() {
