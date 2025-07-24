@@ -730,32 +730,35 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   Widget _buildSelectedImagePreview() {
     if (selectedImage == null) return const SizedBox.shrink();
 
-    return Positioned(
-      bottom: 10,
-      left: 16,
-      child: Stack(
-        alignment: Alignment.topRight,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.file(
-              selectedImage!,
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
-            ),
-          ),
-          GestureDetector(
-            onTap: () => setState(() => selectedImage = null),
-            child: Container(
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.black54,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, bottom: 6),
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                selectedImage!,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
               ),
-              child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
-          ),
-        ],
+            GestureDetector(
+              onTap: () => setState(() => selectedImage = null),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black54,
+                ),
+                child: const Icon(Icons.close, size: 16, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
