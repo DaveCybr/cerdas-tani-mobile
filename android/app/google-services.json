@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "22605493460",
+    "project_id": "cerdas-tani",
+    "storage_bucket": "cerdas-tani.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:22605493460:android:859506cd5cd46f6ca1f741",
+        "android_client_info": {
+          "package_name": "com.example.fertilizer_calculator_mobile_v2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "22605493460-qr4mmgnod0to9dvakq4hf1k05cl681oq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fertilizer_calculator_mobile_v2",
+            "certificate_hash": "0e02bff15e4b8ce4aac50cf051fac9c1180f734d"
+          }
+        },
+        {
+          "client_id": "22605493460-5spa04amua3ne3l30cqnikv9qen9ejb7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgciL60N0QbTkS9DJHlsMiU5EoBhGYDr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "22605493460-5spa04amua3ne3l30cqnikv9qen9ejb7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "22605493460-kbmtgkfm5vc4ol7m3u20t4nc5hpot91i.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.fertilizerCalculatorMobileV2"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
