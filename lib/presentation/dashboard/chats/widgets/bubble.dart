@@ -1,7 +1,9 @@
-// presentation/dashboard/chatbot/widgets/chat_bubble.dart - IMPROVED DESIGN
+// presentation/dashboard/chatbot/widgets/chat_bubble.dart - FIXED VERSION
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/colors.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -14,7 +16,8 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message['type'] == 'sent';
-    final hasImage = message['image'] != null;
+    final hasImage =
+        message['image'] != null && message['image'].toString().isNotEmpty;
     final text = message['text'] as String?;
 
     return Padding(
@@ -83,16 +86,7 @@ class ChatBubble extends StatelessWidget {
 
                           // Text if exists
                           if (text != null && text.isNotEmpty)
-                            Text(
-                              text,
-                              style: TextStyle(
-                                fontSize: 15,
-                                color:
-                                    isUser ? Colors.white : AppColors.darkText,
-                                height: 1.3,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
+                            _buildFormattedText(text, isUser),
                         ],
                       ),
                     ),
@@ -106,7 +100,7 @@ class ChatBubble extends StatelessWidget {
                       ),
                       child: Text(
                         _formatTimestamp(message['timestamp']),
-                        style: const TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: AppColors.secondaryText,
                           fontWeight: FontWeight.w400,
@@ -124,6 +118,107 @@ class ChatBubble extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildFormattedText(String text, bool isUser) {
+    // Parse markdown-like formatting for better display
+    final spans = <TextSpan>[];
+    final lines = text.split('\n');
+
+    for (int lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      String line = lines[lineIndex];
+
+      // Handle numbered lists
+      if (RegExp(r'^\d+\.\s*\*\*.*\*\*:').hasMatch(line)) {
+        // Extract number, bold text, and description
+        final match = RegExp(
+          r'^(\d+)\.\s*\*\*(.*?)\*\*:\s*(.*)',
+        ).firstMatch(line);
+        if (match != null) {
+          final number = match.group(1);
+          final boldText = match.group(2);
+          final description = match.group(3);
+
+          spans.add(
+            TextSpan(
+              text: '$number. ',
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                color: isUser ? Colors.white : AppColors.darkText,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
+            ),
+          );
+
+          spans.add(
+            TextSpan(
+              text: '$boldText: ',
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                color: isUser ? Colors.white : AppColors.darkText,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+              ),
+            ),
+          );
+
+          spans.add(
+            TextSpan(
+              text: description,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                color:
+                    isUser ? Colors.white.withOpacity(0.9) : AppColors.darkText,
+                fontWeight: FontWeight.w400,
+                height: 1.4,
+              ),
+            ),
+          );
+        }
+      }
+      // Handle bold text with **
+      else if (line.contains('**')) {
+        final parts = line.split('**');
+        for (int i = 0; i < parts.length; i++) {
+          final isBold = i % 2 == 1; // Odd indices are bold
+          if (parts[i].isNotEmpty) {
+            spans.add(
+              TextSpan(
+                text: parts[i],
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  color: isUser ? Colors.white : AppColors.darkText,
+                  fontWeight: isBold ? FontWeight.w700 : FontWeight.w400,
+                  height: 1.4,
+                ),
+              ),
+            );
+          }
+        }
+      }
+      // Regular text
+      else {
+        spans.add(
+          TextSpan(
+            text: line,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              color: isUser ? Colors.white : AppColors.darkText,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        );
+      }
+
+      // Add line break except for last line
+      if (lineIndex < lines.length - 1) {
+        spans.add(const TextSpan(text: '\n'));
+      }
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 
   Widget _buildBotAvatar() {
@@ -182,44 +277,72 @@ class ChatBubble extends StatelessWidget {
   Widget _buildImage() {
     final imagePath = message['image'] as String;
 
+    // Handle different image sources
+    Widget imageWidget;
+
+    if (imagePath.startsWith('data:')) {
+      // Base64 image - decode and display
+      try {
+        final base64String = imagePath.split(',')[1];
+        final bytes = base64Decode(base64String);
+        imageWidget = Image.memory(
+          bytes,
+          width: 200,
+          height: 150,
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        imageWidget = _buildImageError();
+      }
+    } else {
+      // File path image
+      final file = File(imagePath);
+      if (file.existsSync()) {
+        imageWidget = Image.file(
+          file,
+          width: 200,
+          height: 150,
+          fit: BoxFit.cover,
+        );
+      } else {
+        imageWidget = _buildImageError();
+      }
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: Image.file(
-        File(imagePath),
-        width: 200,
-        height: 150,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: 200,
-            height: 150,
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.outline.withOpacity(0.3)),
+      child: imageWidget,
+    );
+  }
+
+  Widget _buildImageError() {
+    return Container(
+      width: 200,
+      height: 150,
+      decoration: BoxDecoration(
+        color: AppColors.card.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.outline.withOpacity(0.3)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.broken_image_outlined,
+            color: AppColors.lightText,
+            size: 32,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Gambar tidak dapat dimuat',
+            style: GoogleFonts.poppins(
+              color: AppColors.lightText,
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
             ),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.broken_image_outlined,
-                  color: AppColors.lightText,
-                  size: 32,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Gambar tidak dapat dimuat',
-                  style: TextStyle(
-                    color: AppColors.lightText,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
-        },
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -272,9 +395,9 @@ class ChatBubble extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              const Text(
+              Text(
                 'Opsi Pesan',
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: AppColors.darkText,
@@ -288,7 +411,12 @@ class ChatBubble extends StatelessWidget {
                   title: 'Salin Teks',
                   subtitle: 'Salin pesan ke clipboard',
                   onTap: () {
-                    Clipboard.setData(ClipboardData(text: text));
+                    // Remove markdown formatting when copying
+                    final cleanText = text
+                        .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'$1')
+                        .replaceAll(RegExp(r'\*(.*?)\*'), r'$1');
+
+                    Clipboard.setData(ClipboardData(text: cleanText));
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -349,7 +477,7 @@ class ChatBubble extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: TextStyle(
+          style: GoogleFonts.poppins(
             fontWeight: FontWeight.w500,
             color: tileColor,
             fontSize: 15,
@@ -357,7 +485,7 @@ class ChatBubble extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(fontSize: 12, color: AppColors.lightText),
+          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.lightText),
         ),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

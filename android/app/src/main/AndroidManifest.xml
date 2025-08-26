@@ -28,7 +28,7 @@
     <!-- Application tag HARUS ADA -->
     <application
         android:name="${applicationName}"
-        android:label="fertilizer_calculator_mobile_v2"
+        android:label="Cerdas Tani"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
 

@@ -94,24 +94,127 @@ class ChatbotProvider extends ChangeNotifier {
     }
   }
 
+  // Convert image to base64 for direct sending to server
+  Future<String?> _convertImageToBase64(File imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final base64String = base64Encode(bytes);
+      final mimeType = _getImageMimeType(imageFile.path);
+      return 'data:$mimeType;base64,$base64String';
+    } catch (e) {
+      print('Error converting image to base64: $e');
+      return null;
+    }
+  }
+
+  // NEW: Format history according to API requirements with base64 images
+  String _formatHistoryForAPI() {
+    final formattedHistory = <Map<String, dynamic>>[];
+
+    // Group messages in pairs (user -> assistant)
+    for (int i = 0; i < _messages.length; i++) {
+      final message = _messages[i];
+
+      if (message['type'] == 'sent') {
+        // User message
+        final content = <Map<String, dynamic>>[];
+
+        // Add text content if exists
+        if (message['text'] != null &&
+            message['text'].toString().trim().isNotEmpty) {
+          content.add({
+            'type': 'text',
+            'text': message['text'].toString().trim(),
+          });
+        }
+
+        // Add image content if exists
+        if (message['image'] != null &&
+            message['image'].toString().isNotEmpty) {
+          final imagePath = message['image'].toString();
+
+          // Check if it's already a data URI (base64)
+          if (imagePath.startsWith('data:')) {
+            content.add({
+              'type': 'image',
+              'image': imagePath, // Already base64 data URI
+            });
+          } else {
+            // It's a local file path, convert to base64
+            try {
+              final file = File(imagePath);
+              if (file.existsSync()) {
+                final bytes = file.readAsBytesSync();
+                final base64String = base64Encode(bytes);
+                final mimeType = _getImageMimeType(imagePath);
+                final dataUri = 'data:$mimeType;base64,$base64String';
+
+                content.add({'type': 'image', 'image': dataUri});
+              }
+            } catch (e) {
+              print('Error converting history image to base64: $e');
+              // Skip this image if conversion fails
+            }
+          }
+        }
+
+        if (content.isNotEmpty) {
+          formattedHistory.add({'role': 'user', 'content': content});
+        }
+      } else if (message['type'] == 'received') {
+        // Assistant message
+        if (message['text'] != null &&
+            message['text'].toString().trim().isNotEmpty) {
+          formattedHistory.add({
+            'role': 'assistant',
+            'content': message['text'].toString().trim(),
+          });
+        }
+      }
+    }
+
+    // Limit to last 10 interactions to avoid payload being too large
+    if (formattedHistory.length > 20) {
+      return jsonEncode(formattedHistory.sublist(formattedHistory.length - 20));
+    }
+
+    return jsonEncode(formattedHistory);
+  }
+
   Future<void> sendMessage(String userMessage, {File? imageFile}) async {
     if (userMessage.trim().isEmpty && imageFile == null) return;
 
     // Validate image file if present
+    String? imageBase64;
     if (imageFile != null) {
       final validationError = _validateImageFile(imageFile);
       if (validationError != null) {
         _addErrorMessage(validationError);
         return;
       }
+
+      // Convert image to base64 data URI
+      imageBase64 = await _convertImageToBase64(imageFile);
+      if (imageBase64 == null) {
+        _addErrorMessage('Gagal memproses gambar. Silakan coba lagi.');
+        return;
+      }
     }
 
-    // Add user message to chat
+    print(
+      imageFile != null
+          ? 'Sending message with image: ${imageFile.path}'
+          : 'Sending message without image',
+    );
+
+    // Add user message to chat - store base64 for consistency
     final userMsg = {
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
       'type': 'sent',
       'text': userMessage.trim().isEmpty ? null : userMessage.trim(),
-      'image': imageFile?.path,
+      'image':
+          imageBase64 ??
+          imageFile?.path, // Store base64 if available, fallback to path for UI
       'timestamp': DateTime.now().toIso8601String(),
     };
 
@@ -121,9 +224,14 @@ class ChatbotProvider extends ChangeNotifier {
     _saveChatHistory();
 
     try {
-      final aiReply = await _sendToAPI(userMessage, imageFile);
+      final aiReply = await _sendToAPI(userMessage, imageFile, imageBase64);
 
+      print('user msg:$userMsg');
       // Add AI response to chat
+      print('=== AI REPLY RECEIVED ===');
+      print('AI Reply: $aiReply');
+      print('========================');
+
       final aiMsg = {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
         'type': 'received',
@@ -135,7 +243,6 @@ class ChatbotProvider extends ChangeNotifier {
       _messages.add(aiMsg);
       _saveChatHistory();
     } catch (e) {
-      debugPrint('Error in sendMessage: $e');
       _addErrorMessage(_getErrorMessage(e));
     } finally {
       _isLoading = false;
@@ -155,7 +262,6 @@ class ChatbotProvider extends ChangeNotifier {
   }
 
   String _getErrorMessage(dynamic error) {
-    debugPrint('Handling error: $error');
     final errorString = error.toString();
 
     // Handle specific error cases
@@ -177,152 +283,208 @@ class ChatbotProvider extends ChangeNotifier {
     }
   }
 
-  Future<String?> _sendToAPI(String userMessage, File? imageFile) async {
-    // FIX: URL endpoint sesuai dengan route Laravel
-    const url = 'http://192.168.1.10:8000/api/growbot/chat';
-    const timeout = Duration(seconds: 30);
-
-    // Prepare chat history for API (sesuai format Laravel)
-    final history =
-        _messages
-            .where((msg) => msg['type'] == 'sent' || msg['type'] == 'received')
-            .take(10) // Limit history to last 10 messages for performance
-            .map((msg) {
-              return {
-                'role': msg['type'] == 'sent' ? 'user' : 'assistant',
-                'content': msg['text'] ?? '[gambar]',
-              };
-            })
-            .toList();
+  // UPDATED: Modified to match server expectations exactly
+  Future<String?> _sendToAPI(
+    String userMessage,
+    File? imageFile,
+    String? imageBase64,
+  ) async {
+    // Updated URL to match your server route
+    const url = 'http://192.168.1.5:8000/api/growbot/chat';
+    const timeout = Duration(seconds: 60); // Match server timeout
 
     try {
-      final request = http.MultipartRequest('POST', Uri.parse(url));
-
-      // Set headers
-      request.headers.addAll({
-        'Accept': 'application/json',
-        'User-Agent': 'CerdasTani/1.0',
-      });
-
-      // FIX: Jika ada gambar tapi tidak ada text, beri default message
-      String finalMessage = userMessage;
-      if (imageFile != null && userMessage.trim().isEmpty) {
-        finalMessage = 'Analisis gambar ini';
-      }
-
-      request.fields['user_message'] = finalMessage;
-      request.fields['history'] = jsonEncode(history);
-      request.fields['system_prompt'] =
-          ''; // Optional, akan menggunakan default
-
+      // Check if we should use multipart (when sending current image file)
       if (imageFile != null) {
-        final mimeType = _getImageMimeType(imageFile.path);
-
-        debugPrint('Preparing image file:');
-        debugPrint('Path: ${imageFile.path}');
-        debugPrint('Size: ${imageFile.lengthSync()} bytes');
-        debugPrint('MIME Type: $mimeType');
-
-        final multipartFile = await http.MultipartFile.fromPath(
-          'image_file',
-          imageFile.path,
-          contentType: MediaType.parse(mimeType),
+        return await _sendMultipartRequest(
+          url,
+          userMessage,
+          imageFile,
+          timeout,
         );
-
-        request.files.add(multipartFile);
+      } else {
+        return await _sendJsonRequest(url, userMessage, timeout);
       }
+    } on SocketException catch (e) {
+      print('=== SOCKET EXCEPTION ===');
+      print('Socket Error: $e');
+      throw Exception('No internet connection available');
+    } on http.ClientException catch (e) {
+      print('=== CLIENT EXCEPTION ===');
+      print('Client Error: $e');
+      throw Exception('Network error: ${e.message}');
+    } on FormatException catch (e) {
+      print('=== FORMAT EXCEPTION ===');
+      print('Format Error: $e');
+      throw Exception('Data format error: ${e.message}');
+    } catch (e) {
+      print('=== UNEXPECTED ERROR ===');
+      print('Unexpected error: $e');
+      rethrow;
+    }
+  }
 
-      debugPrint('Sending to API with data:');
-      debugPrint('user_message: ${request.fields['user_message']}');
-      debugPrint('history count: ${history.length}');
-      debugPrint('has image: ${imageFile != null}');
+  // Send with image file (multipart request)
+  Future<String?> _sendMultipartRequest(
+    String url,
+    String userMessage,
+    File imageFile,
+    Duration timeout,
+  ) async {
+    final request = http.MultipartRequest('POST', Uri.parse(url));
 
-      final streamedResponse = await request.send().timeout(timeout);
-      final response = await http.Response.fromStream(streamedResponse);
+    // Set headers
+    request.headers.addAll({
+      'Accept': 'application/json',
+      'User-Agent': 'CerdasTani/1.0',
+    });
 
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
+    // Add fields
+    String finalMessage =
+        userMessage.trim().isEmpty ? 'Analisis gambar ini' : userMessage.trim();
+    request.fields['user_message'] = finalMessage;
+    request.fields['history'] = _formatHistoryForAPI();
+    request.fields['system_prompt'] = ''; // Let server use default
 
-      if (response.statusCode == 200) {
-        try {
-          final jsonResponse = jsonDecode(response.body);
+    // Add image file
+    final mimeType = _getImageMimeType(imageFile.path);
+    final multipartFile = await http.MultipartFile.fromPath(
+      'image_file', // Server expects 'image_file'
+      imageFile.path,
+      contentType: MediaType.parse(mimeType),
+    );
+    request.files.add(multipartFile);
 
-          // FIX: Sesuaikan dengan response format Laravel controller yang baru
-          if (jsonResponse is Map<String, dynamic>) {
-            if (jsonResponse['success'] == true &&
-                jsonResponse.containsKey('ai_reply')) {
-              return jsonResponse['ai_reply']?.toString();
-            } else if (jsonResponse.containsKey('ai_reply')) {
-              // Fallback untuk format lama
-              return jsonResponse['ai_reply']?.toString();
-            } else {
-              debugPrint('Unexpected response format: $jsonResponse');
-              throw Exception('Invalid response format from server');
-            }
+    print('=== MULTIPART REQUEST ===');
+    print('URL: $url');
+    print('user_message: ${request.fields['user_message']}');
+    print('history length: ${request.fields['history']?.length ?? 0}');
+    print('has image_file: true');
+    print('========================');
+
+    final streamedResponse = await request.send().timeout(timeout);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    return _handleResponse(response);
+  }
+
+  // Send without image (JSON request)
+  Future<String?> _sendJsonRequest(
+    String url,
+    String userMessage,
+    Duration timeout,
+  ) async {
+    final payload = {
+      'user_message':
+          userMessage.trim().isEmpty
+              ? 'Lanjutkan percakapan'
+              : userMessage.trim(),
+      'image_url': '', // Empty string as expected by server
+      'history': _formatHistoryForAPI(),
+      'system_prompt': '', // Let server use default
+    };
+
+    print('=== JSON REQUEST ===');
+    print('URL: $url');
+    print('Payload: ${jsonEncode(payload)}');
+    print('===================');
+
+    final response = await http
+        .post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'CerdasTani/1.0',
+          },
+          body: jsonEncode(payload),
+        )
+        .timeout(timeout);
+
+    return _handleResponse(response);
+  }
+
+  // Handle response from server
+  String? _handleResponse(http.Response response) {
+    print('=== RESPONSE RECEIVED ===');
+    print('Status Code: ${response.statusCode}');
+    print('Response Headers: ${response.headers}');
+    print('Response Body: ${response.body}');
+    print('========================');
+
+    if (response.statusCode == 200) {
+      try {
+        final jsonResponse = jsonDecode(response.body);
+        print('=== PARSING JSON RESPONSE ===');
+        print('Parsed JSON: $jsonResponse');
+
+        if (jsonResponse is Map<String, dynamic>) {
+          // Handle success response
+          if (jsonResponse['success'] == true &&
+              jsonResponse.containsKey('ai_reply')) {
+            return jsonResponse['ai_reply']?.toString();
+          }
+          // Handle direct ai_reply response
+          else if (jsonResponse.containsKey('ai_reply')) {
+            return jsonResponse['ai_reply']?.toString();
+          }
+          // Handle message response
+          else if (jsonResponse.containsKey('message')) {
+            return jsonResponse['message']?.toString();
           } else {
             throw Exception('Invalid response format from server');
           }
-        } catch (jsonError) {
-          debugPrint('JSON Parse Error: $jsonError');
-          debugPrint('Raw Response: ${response.body}');
-          throw Exception('Invalid JSON response from server');
+        } else {
+          throw Exception('Invalid response format from server');
         }
-      } else if (response.statusCode == 422) {
-        // FIX: Handle validation errors dari Laravel
-        try {
-          final errorResponse = jsonDecode(response.body);
-          if (errorResponse['errors'] != null) {
-            final errors = errorResponse['errors'] as Map<String, dynamic>;
-            final firstError = errors.values.first;
-            if (firstError is List && firstError.isNotEmpty) {
-              throw Exception('Validation error: ${firstError.first}');
-            }
-          }
-          throw Exception(
-            'Validation error: ${errorResponse['message'] ?? 'Data tidak valid'}',
-          );
-        } catch (jsonError) {
-          throw Exception('Validation error: Invalid data sent to server');
-        }
-      } else if (response.statusCode == 413) {
-        throw Exception('Server error: 413 - File too large');
-      } else if (response.statusCode >= 500) {
-        try {
-          final errorResponse = jsonDecode(response.body);
-          if (errorResponse['message'] != null) {
-            throw Exception('Server error: ${errorResponse['message']}');
-          }
-        } catch (_) {
-          // Ignore JSON parsing error for server errors
-        }
-        throw Exception('Server error: ${response.statusCode}');
-      } else if (response.statusCode == 400) {
-        try {
-          final errorResponse = jsonDecode(response.body);
-          if (errorResponse['message'] != null) {
-            throw Exception(errorResponse['message']);
-          } else if (errorResponse['error'] != null) {
-            throw Exception(errorResponse['error'].toString());
-          } else {
-            throw Exception('Bad request: Invalid data sent to server');
-          }
-        } catch (jsonError) {
-          throw Exception('Bad request: ${response.statusCode}');
-        }
-      } else {
-        debugPrint('Unexpected status code: ${response.statusCode}');
-        debugPrint('Response body: ${response.body}');
-        throw Exception('HTTP error: ${response.statusCode}');
+      } catch (jsonError) {
+        print('=== JSON PARSE ERROR ===');
+        print('JSON Error: $jsonError');
+        throw Exception('Invalid JSON response from server');
       }
-    } on SocketException {
-      throw Exception('No internet connection available');
-    } on http.ClientException catch (e) {
-      throw Exception('Network error: ${e.message}');
-    } on FormatException catch (e) {
-      throw Exception('Data format error: ${e.message}');
-    } catch (e) {
-      debugPrint('Unexpected error in _sendToAPI: $e');
-      rethrow;
+    } else if (response.statusCode == 422) {
+      // Handle validation errors
+      try {
+        final errorResponse = jsonDecode(response.body);
+        if (errorResponse['errors'] != null) {
+          final errors = errorResponse['errors'] as Map<String, dynamic>;
+          final firstError = errors.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            throw Exception('Validation error: ${firstError.first}');
+          }
+        }
+        throw Exception(
+          'Validation error: ${errorResponse['message'] ?? 'Data tidak valid'}',
+        );
+      } catch (jsonError) {
+        throw Exception('Validation error: Invalid data sent to server');
+      }
+    } else if (response.statusCode == 413) {
+      throw Exception('Server error: 413 - File too large');
+    } else if (response.statusCode >= 500) {
+      try {
+        final errorResponse = jsonDecode(response.body);
+        if (errorResponse['message'] != null) {
+          throw Exception('Server error: ${errorResponse['message']}');
+        }
+      } catch (_) {
+        // Ignore JSON parse error for server errors
+      }
+      throw Exception('Server error: ${response.statusCode}');
+    } else if (response.statusCode == 400) {
+      try {
+        final errorResponse = jsonDecode(response.body);
+        if (errorResponse['message'] != null) {
+          throw Exception(errorResponse['message']);
+        } else if (errorResponse['error'] != null) {
+          throw Exception(errorResponse['error'].toString());
+        }
+      } catch (_) {
+        // Ignore JSON parse error
+      }
+      throw Exception('Bad request: ${response.statusCode}');
+    } else {
+      throw Exception('HTTP error: ${response.statusCode}');
     }
   }
 
@@ -379,25 +541,35 @@ class ChatbotProvider extends ChangeNotifier {
     }
   }
 
-  // FIX: Method untuk test koneksi
+  // Updated connection test to match server expectations
   Future<bool> testConnection() async {
+    print('=== TESTING CONNECTION ===');
     try {
-      const url = 'http://sirangga.satelliteorbit.cloud/chatbots/chat';
+      const url = 'http://192.168.1.5:8000/api/growbot/chat';
+
+      final testPayload = {
+        'user_message': 'test connection',
+        'image_url': '',
+        'history': '[]',
+        'system_prompt': '',
+      };
+
       final response = await http
           .post(
             Uri.parse(url),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'user_message': 'test',
-              'history': '[]',
-              'system_prompt': '',
-            }),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(testPayload),
           )
           .timeout(Duration(seconds: 10));
 
+      print('Test Response Status: ${response.statusCode}');
+      print('Test Response Body: ${response.body}');
       return response.statusCode == 200 || response.statusCode == 422;
     } catch (e) {
-      debugPrint('Connection test failed: $e');
+      print('Connection test error: $e');
       return false;
     }
   }

@@ -293,10 +293,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
 
     try {
-      context.read<ChatbotProvider>().sendMessage(
+      final response = context.read<ChatbotProvider>().sendMessage(
         message,
         imageFile: _selectedImage,
       );
+
+      print('Chatbot response: $response');
 
       _messageController.clear();
       setState(() {

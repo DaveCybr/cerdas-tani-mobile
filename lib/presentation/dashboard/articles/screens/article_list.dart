@@ -57,29 +57,6 @@ class _ArticlePageContentState extends State<ArticlePageContent> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
-                  // Top Bar
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.arrow_back_ios_new,
-                            color: AppColors.primary,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
                   // Page Title
                   Align(
                     alignment: Alignment.centerLeft,

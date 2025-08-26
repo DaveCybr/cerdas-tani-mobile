@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/navigations/app_navigator.dart';
@@ -167,15 +168,16 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FlutterLogo(size: 120),
+            // Icon(Icons.agriculture, size: 80, color: Colors.white),
+            Image.asset("assets/images/logo.png", height: 100),
             SizedBox(height: 24),
             Text(
               'Cerdas Tani',
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -188,7 +190,7 @@ class SplashScreen extends StatelessWidget {
             SizedBox(height: 8),
             Text(
               'Loading...',
-              style: TextStyle(fontSize: 16, color: Colors.white70),
+              style: GoogleFonts.poppins(fontSize: 16, color: Colors.white70),
             ),
           ],
         ),
