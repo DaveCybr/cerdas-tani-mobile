@@ -290,7 +290,7 @@ class ChatbotProvider extends ChangeNotifier {
     String? imageBase64,
   ) async {
     // Updated URL to match your server route
-    const url = 'http://192.168.1.5:8000/api/growbot/chat';
+    const url = 'http://sirangga.satelliteorbit.cloud/api/growbot/chat';
     const timeout = Duration(seconds: 60); // Match server timeout
 
     try {
@@ -545,7 +545,7 @@ class ChatbotProvider extends ChangeNotifier {
   Future<bool> testConnection() async {
     print('=== TESTING CONNECTION ===');
     try {
-      const url = 'http://192.168.1.5:8000/api/growbot/chat';
+      const url = 'http://sirangga.satelliteorbit.cloud/api/growbot/chat';
 
       final testPayload = {
         'user_message': 'test connection',

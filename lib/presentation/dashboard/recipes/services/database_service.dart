@@ -75,10 +75,6 @@ class DatabaseService {
       CREATE INDEX idx_recipe_type ON $_recipeTable (type)
     ''');
 
-    await db.execute('''
-      CREATE INDEX idx_recipe_crop ON $_recipeTable (target_crop)
-    ''');
-
     // Insert default HydroBuddy-style recipes
     await _insertDefaultRecipes(db);
   }
@@ -136,21 +132,6 @@ class DatabaseService {
       'tables': tables,
       'recipe_count': recipeCount.first['count'],
     };
-  }
-
-  // Get recipes by crop type (HydroBuddy feature)
-  Future<List<RecipeModel>> getRecipesByCrop(String crop) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      _recipeTable,
-      where: 'target_crop = ?',
-      whereArgs: [crop],
-      orderBy: 'name ASC',
-    );
-
-    return List.generate(maps.length, (i) {
-      return RecipeModel.fromMap(maps[i]);
-    });
   }
 
   // Get recipes by EC
