@@ -7,6 +7,8 @@ import '../../articles/providers/article_provider.dart';
 import '../../articles/screens/article_section.dart';
 
 import '../../chats/screens/chat_screen.dart';
+import '../../modules/providers/module_provider.dart';
+import '../../modules/screens/module_section.dart';
 import '../widgets/calculator_card.dart';
 import '../widgets/feature_grid.dart';
 import '../widgets/feature_item.dart';
@@ -74,6 +76,14 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                         articles: context.watch<ArticleProvider>().articles,
                         onSeeAllPressed: () {
                           AppNavigator.push('/home/articles');
+                        },
+                      ),
+
+                      // Modules Section (if needed)
+                      ModuleSection(
+                        modules: context.watch<ModuleProvider>().modules,
+                        onSeeAllPressed: () {
+                          AppNavigator.push('/home/modules');
                         },
                       ),
                       const SizedBox(height: 100), // Extra space for bottom nav

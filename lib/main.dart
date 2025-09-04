@@ -15,6 +15,7 @@ import 'core/theme/provider/theme_provider.dart';
 import 'presentation/auth/providers/auth_provider.dart';
 import 'presentation/dashboard/articles/providers/article_provider.dart';
 import 'presentation/dashboard/chats/providers/chat_provider.dart';
+import 'presentation/dashboard/modules/providers/module_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,7 @@ void main() async {
   final nutrientProvider = NutrientProvider();
   final articleProvider = ArticleProvider();
   final chatbotProvider = ChatbotProvider();
+  final moduleProvider = ModuleProvider();
 
   runApp(
     MultiProvider(
@@ -46,6 +48,7 @@ void main() async {
         ChangeNotifierProvider.value(value: nutrientProvider),
         ChangeNotifierProvider.value(value: articleProvider),
         ChangeNotifierProvider.value(value: chatbotProvider),
+        ChangeNotifierProvider.value(value: moduleProvider),
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
       ],
       child: const MyApp(),
