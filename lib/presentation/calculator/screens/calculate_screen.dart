@@ -1250,6 +1250,9 @@ class _CalculatorScreenContentState extends State<CalculatorScreenContent> {
                                                           Text(
                                                             nutrient.name,
                                                             style: TextStyle(
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w600,

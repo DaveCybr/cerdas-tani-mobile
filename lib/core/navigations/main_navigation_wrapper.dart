@@ -1,4 +1,5 @@
 // main_navigation_wrapper.dart - Persistent bottom navigation
+import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/modules/screens/module_list_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/navigations/widgets/navbar.dart';
@@ -48,6 +49,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
         children: const [
           HomeScreenContent(), // Content only, without bottom nav
           ArticlePageContent(), // Content only, without bottom nav
+          ModuleListScreen(), // Content only
           CalculatorScreenContent(), // Content only
           ProfileScreen(), // Content only
         ],
@@ -64,6 +66,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
     return [
       BottomNavItem(icon: Icons.home_rounded, label: 'Beranda'),
       BottomNavItem(icon: Icons.article_rounded, label: 'Artikel'),
+      BottomNavItem(icon: Icons.extension_rounded, label: 'Modul'),
       BottomNavItem(icon: Icons.calculate_rounded, label: 'Kalkulator'),
       BottomNavItem(icon: Icons.person_rounded, label: 'Profil'),
     ];

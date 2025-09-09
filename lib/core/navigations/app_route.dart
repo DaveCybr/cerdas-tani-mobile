@@ -15,6 +15,9 @@ class AppRoutes {
   // Main Navigation Routes (dengan persistent bottom nav)
   static const String home = '/home';
   static const String articles = '/home/articles';
+  static const String articleDetail = '/article/detail';
+  static const String modules = '/home/modules';
+  static const String moduleDetail = '/modules/detail';
   static const String mainCalculator = '/main/calculator';
   static const String mainProfile = '/main/profile';
 
@@ -26,7 +29,7 @@ class AppRoutes {
   static const String nutrientCalculator = '/home/nutrient/calculator';
   static const String nutrientCalculatorResult =
       '/home/nutrient/calculator/result';
-  static const String articleDetail = '/article/detail';
+
   static const String chat = '/chat'; // New chat route
 
   // Profile module routes (secondary)

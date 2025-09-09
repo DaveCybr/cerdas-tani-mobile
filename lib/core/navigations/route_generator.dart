@@ -2,6 +2,8 @@
 // import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/articles/screens/article_list.dart';
 import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/articles/models/article_model.dart';
 import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/chats/screens/chat_screen.dart';
+import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/modules/models/module_model.dart';
+import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/modules/screens/module_detail.dart';
 import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/nutrients/screens/nutrient_screen.dart';
 import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/recipes/screens/recipe_screens.dart';
 import 'package:fertilizer_calculator_mobile_v2/presentation/dashboard/weathers/screens/forecast_weather_screen.dart';
@@ -57,11 +59,19 @@ class RouteGenerator {
           ),
         );
 
+      case AppRoutes.modules:
+        return RouteMiddleware.requireAuth(
+          PageTransitions.fadeTransition(
+            const MainNavigationWrapper(initialIndex: 2),
+            settings,
+          ),
+        );
+
       // Jika ada route untuk calculator di main nav
       case '/main/calculator':
         return RouteMiddleware.requireAuth(
           PageTransitions.fadeTransition(
-            const MainNavigationWrapper(initialIndex: 2),
+            const MainNavigationWrapper(initialIndex: 3),
             settings,
           ),
         );
@@ -70,7 +80,7 @@ class RouteGenerator {
       case '/main/profile':
         return RouteMiddleware.requireAuth(
           PageTransitions.fadeTransition(
-            const MainNavigationWrapper(initialIndex: 3),
+            const MainNavigationWrapper(initialIndex: 4),
             settings,
           ),
         );
@@ -125,6 +135,27 @@ class RouteGenerator {
             ErrorPage(
               routeName: settings.name,
               errorMessage: 'Article data not found',
+            ),
+            settings,
+          );
+        }
+
+      // Module Detail - Secondary page dengan back button
+      case '/modules/detail':
+        final module = settings.arguments as Module?;
+        if (module != null) {
+          return RouteMiddleware.requireAuth(
+            PageTransitions.slideFromRight(
+              ModuleDetailScreen(module: module),
+              settings,
+            ),
+          );
+        } else {
+          // Handle error case when no module ID is passed
+          return PageTransitions.slideFromRight(
+            ErrorPage(
+              routeName: settings.name,
+              errorMessage: 'Module not found',
             ),
             settings,
           );

@@ -56,6 +56,8 @@ dependencies:
   permission_handler: ^11.0.1
   device_info_plus:
   flutter_launcher_icons: ^0.14.4
+  open_filex: ^4.7.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

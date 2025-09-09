@@ -151,7 +151,7 @@ class _CustomBottomNavigationState extends State<CustomBottomNavigation>
                   AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 300),
                     style: TextStyle(
-                      fontSize: isActive ? 11 : 10,
+                      fontSize: isActive ? 8 : 8,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                       color:
                           isActive

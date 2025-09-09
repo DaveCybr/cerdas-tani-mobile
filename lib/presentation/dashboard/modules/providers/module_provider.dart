@@ -20,6 +20,10 @@ class ModuleProvider extends ChangeNotifier {
   int _totalModules = 0;
   bool _hasMoreData = true;
 
+  // Download state
+  bool _isDownloading = false;
+  String? _downloadProgress;
+
   // Getters
   List<Module> get modules => _modules;
   Module? get selectedModule => _selectedModule;
@@ -32,6 +36,8 @@ class ModuleProvider extends ChangeNotifier {
   int get totalModules => _totalModules;
   bool get hasMoreData => _hasMoreData;
   bool get hasData => _modules.isNotEmpty;
+  bool get isDownloading => _isDownloading;
+  String? get downloadProgress => _downloadProgress;
 
   // Clear error message
   void clearError() {
@@ -65,7 +71,7 @@ class ModuleProvider extends ChangeNotifier {
       _totalModules = response.total;
       _hasMoreData = _currentPage < _lastPage;
 
-      print('Loaded ${_modules} modules.');
+      print('Loaded ${_modules.length} modules.');
 
       _errorMessage = null;
     } catch (e) {
@@ -184,27 +190,58 @@ class ModuleProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Download module attachment
-  Future<bool> downloadModuleAttachment(Module module) async {
-    if (module.attachment == null) return false;
+  // Download module attachment with improved handling
+  Future<String?> downloadModuleAttachment(Module module) async {
+    if (module.attachment == null) {
+      _errorMessage = 'No attachment available for this module';
+      notifyListeners();
+      return null;
+    }
+
+    _isDownloading = true;
+    _downloadProgress = 'Preparing download...';
+    _errorMessage = null;
+    notifyListeners();
 
     try {
-      final response = await _moduleService.downloadModuleAttachment(
+      _downloadProgress = 'Checking file availability...';
+      notifyListeners();
+
+      // First check if file exists
+      final exists = await _moduleService.checkAttachmentExists(
         module.attachment!,
       );
-
-      if (response.statusCode == 200) {
-        // Handle successful download
-        // You might want to save to device storage here
-        debugPrint('Module downloaded successfully: ${module.name}');
-        return true;
+      if (!exists) {
+        throw Exception('File not found on server. Please contact support.');
       }
-      return false;
-    } catch (e) {
-      _errorMessage = 'Download failed: $e';
+
+      _downloadProgress = 'Downloading file...';
       notifyListeners();
+
+      // Download the file
+      final filePath = await _moduleService.downloadModuleAttachment(module);
+
+      _downloadProgress = 'Download completed!';
+      notifyListeners();
+
+      debugPrint('Module downloaded successfully: ${module.name} to $filePath');
+
+      // Clear progress after a short delay
+      Future.delayed(const Duration(seconds: 1), () {
+        _downloadProgress = null;
+        notifyListeners();
+      });
+
+      return filePath;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _downloadProgress = null;
       debugPrint('Error downloading module: $e');
-      return false;
+      notifyListeners();
+      return null;
+    } finally {
+      _isDownloading = false;
+      notifyListeners();
     }
   }
 
@@ -220,6 +257,18 @@ class ModuleProvider extends ChangeNotifier {
     }
   }
 
+  // Get correct download URL for a module
+  Future<String?> getModuleDownloadUrl(Module module) async {
+    if (module.attachment == null) return null;
+
+    try {
+      return await _moduleService.getCorrectDownloadUrl(module.attachment!);
+    } catch (e) {
+      debugPrint('Error getting download URL: $e');
+      return null;
+    }
+  }
+
   // Get filtered modules by status
   List<Module> getActiveModules() {
     return _modules.where((module) => module.isActive).toList();
@@ -228,5 +277,12 @@ class ModuleProvider extends ChangeNotifier {
   // Get modules count
   int get activeModulesCount {
     return _modules.where((module) => module.isActive).length;
+  }
+
+  // Clear download state
+  void clearDownloadState() {
+    _isDownloading = false;
+    _downloadProgress = null;
+    notifyListeners();
   }
 }

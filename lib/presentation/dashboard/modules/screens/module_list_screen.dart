@@ -94,7 +94,8 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
           ),
     );
 
-    final success = await provider.downloadModuleAttachment(module);
+    final String? result = await provider.downloadModuleAttachment(module);
+    final bool success = result != null;
 
     // Close loading dialog
     if (mounted) Navigator.of(context).pop();
@@ -116,84 +117,139 @@ class _ModuleListScreenState extends State<ModuleListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Learning Modules',
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+      // appBar: AppBar(
+      //   title: const Text(
+      //     'Learning Modules',
+      //     style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+      //   ),
+      //   backgroundColor: AppColors.primary,
+      //   elevation: 0,
+      //   iconTheme: const IconThemeData(color: Colors.white),
+      // ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(15.0),
+              child: Column(
+                children: [
+                  // Page Title
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Learning Modules',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkText,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Search Bar
+                  TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    decoration: InputDecoration(
+                      hintText: 'Search modules...',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                      suffixIcon: Consumer<ModuleProvider>(
+                        builder: (context, provider, child) {
+                          return provider.searchQuery.isNotEmpty
+                              ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                color: Colors.grey[400],
+                                onPressed: _clearSearch,
+                              )
+                              : const SizedBox.shrink();
+                        },
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Search Section
+            // Container(
+            //   padding: const EdgeInsets.all(16),
+            //   decoration: BoxDecoration(
+            //     color: AppColors.primary,
+            //     borderRadius: const BorderRadius.only(
+            //       bottomLeft: Radius.circular(20),
+            //       bottomRight: Radius.circular(20),
+            //     ),
+            //   ),
+            //   child: TextField(
+            //     controller: _searchController,
+            //     onChanged: _onSearchChanged,
+            //     decoration: InputDecoration(
+            //       hintText: 'Search modules...',
+            //       hintStyle: TextStyle(color: Colors.grey[400]),
+            //       prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+            //       suffixIcon: Consumer<ModuleProvider>(
+            //         builder: (context, provider, child) {
+            //           return provider.searchQuery.isNotEmpty
+            //               ? IconButton(
+            //                 icon: const Icon(Icons.clear),
+            //                 color: Colors.grey[400],
+            //                 onPressed: _clearSearch,
+            //               )
+            //               : const SizedBox.shrink();
+            //         },
+            //       ),
+            //       filled: true,
+            //       fillColor: Colors.white,
+            //       border: OutlineInputBorder(
+            //         borderRadius: BorderRadius.circular(12),
+            //         borderSide: BorderSide.none,
+            //       ),
+            //       contentPadding: const EdgeInsets.symmetric(
+            //         horizontal: 16,
+            //         vertical: 12,
+            //       ),
+            //     ),
+            //   ),
+            // ),
+
+            // Modules List
+            Expanded(
+              child: Consumer<ModuleProvider>(
+                builder: (context, provider, child) {
+                  // Error State
+                  if (provider.errorMessage != null && !provider.hasData) {
+                    return _buildErrorState(provider);
+                  }
+
+                  // Loading State (initial)
+                  if (provider.isLoading && !provider.hasData) {
+                    return _buildLoadingState();
+                  }
+
+                  // Empty State
+                  if (!provider.hasData && !provider.isLoading) {
+                    return _buildEmptyState(provider);
+                  }
+
+                  // Content State
+                  return _buildContentState(provider);
+                },
+              ),
+            ),
+          ],
         ),
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Column(
-        children: [
-          // Search Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-              ),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search modules...',
-                hintStyle: TextStyle(color: Colors.grey[400]),
-                prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                suffixIcon: Consumer<ModuleProvider>(
-                  builder: (context, provider, child) {
-                    return provider.searchQuery.isNotEmpty
-                        ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          color: Colors.grey[400],
-                          onPressed: _clearSearch,
-                        )
-                        : const SizedBox.shrink();
-                  },
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-
-          // Modules List
-          Expanded(
-            child: Consumer<ModuleProvider>(
-              builder: (context, provider, child) {
-                // Error State
-                if (provider.errorMessage != null && !provider.hasData) {
-                  return _buildErrorState(provider);
-                }
-
-                // Loading State (initial)
-                if (provider.isLoading && !provider.hasData) {
-                  return _buildLoadingState();
-                }
-
-                // Empty State
-                if (!provider.hasData && !provider.isLoading) {
-                  return _buildEmptyState(provider);
-                }
-
-                // Content State
-                return _buildContentState(provider);
-              },
-            ),
-          ),
-        ],
       ),
     );
   }

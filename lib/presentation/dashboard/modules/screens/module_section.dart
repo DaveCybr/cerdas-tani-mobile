@@ -129,9 +129,18 @@ class ModuleSection extends StatelessWidget {
   }
 
   Widget _buildModuleItem(Module module) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: onModuleTap != null ? () => onModuleTap!(module) : null,
         borderRadius: BorderRadius.circular(12),
@@ -147,7 +156,7 @@ class ModuleSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  _getModuleIcon(module),
+                  Icons.library_books,
                   color: AppColors.primary,
                   size: 24,
                 ),
@@ -257,16 +266,16 @@ class ModuleSection extends StatelessWidget {
     );
   }
 
-  IconData _getModuleIcon(Module module) {
-    if (module.name.toLowerCase().contains('hidroponik')) {
-      return Icons.water_drop;
-    } else if (module.name.toLowerCase().contains('pupuk')) {
-      return Icons.eco;
-    } else if (module.name.toLowerCase().contains('tanaman')) {
-      return Icons.local_florist;
-    }
-    return Icons.library_books;
-  }
+  // IconData _getModuleIcon(Module module) {
+  //   if (module.name.toLowerCase().contains('hidroponik')) {
+  //     return Icons.water_drop;
+  //   } else if (module.name.toLowerCase().contains('pupuk')) {
+  //     return Icons.eco;
+  //   } else if (module.name.toLowerCase().contains('tanaman')) {
+  //     return Icons.local_florist;
+  //   }
+  //   return Icons.library_books;
+  // }
 
   IconData _getAttachmentIcon(Module module) {
     if (module.isPdfFile) {
