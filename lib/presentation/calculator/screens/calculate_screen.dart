@@ -251,11 +251,17 @@ class _CalculatorScreenContentState extends State<CalculatorScreenContent> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      nutrient.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                    Flexible(
+                      child: Text(
+                        nutrient.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: MediaQuery.of(context).size.width * 0.035,
+                          // color:
+                          //     isSelected ? Colors.green[800] : Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                     Container(
@@ -844,13 +850,15 @@ class _CalculatorScreenContentState extends State<CalculatorScreenContent> {
 
     try {
       final volumeLiters = double.parse(_volumeController.text);
+      double volumeReal = volumeLiters / 2;
+      print('Adjusted Volume (Liters): $volumeReal');
       final concentrationFactor = double.parse(_concentrationController.text);
 
       // Call the real API
       final apiResponse = await CalculationApiService.calculateNutrition(
         recipe: _selectedRecipe!,
         fertilizers: _selectedNutrients,
-        volumeLiters: volumeLiters,
+        volumeLiters: volumeReal,
         concentrationFactor: concentrationFactor,
       );
 
@@ -1247,21 +1255,29 @@ class _CalculatorScreenContentState extends State<CalculatorScreenContent> {
                                                             MainAxisAlignment
                                                                 .spaceBetween,
                                                         children: [
-                                                          Text(
-                                                            nutrient.name,
-                                                            style: TextStyle(
+                                                          Flexible(
+                                                            child: Text(
+                                                              nutrient.name,
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                fontSize:
+                                                                    MediaQuery.of(
+                                                                      context,
+                                                                    ).size.width *
+                                                                    0.035,
+                                                                color:
+                                                                    isSelected
+                                                                        ? Colors
+                                                                            .green[800]
+                                                                        : Colors
+                                                                            .black87,
+                                                              ),
                                                               overflow:
                                                                   TextOverflow
                                                                       .ellipsis,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color:
-                                                                  isSelected
-                                                                      ? Colors
-                                                                          .green[800]
-                                                                      : Colors
-                                                                          .black87,
+                                                              maxLines: 1,
                                                             ),
                                                           ),
                                                           Container(

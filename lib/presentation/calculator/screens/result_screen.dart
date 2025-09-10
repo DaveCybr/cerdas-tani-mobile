@@ -15,7 +15,7 @@ class ResultScreen extends StatelessWidget {
 
     final recipe = args['recipe'];
     // final nutrients = args['nutrients'] as List;
-    final volume = args['volume'] as double;
+    final volume = args['volume'] / 2 as double;
     final concentration = args['concentration'] as double;
     // final targetPPM = args['target_ppm'] as Map<String, double>;
     // final resultPPM = args['result_ppm'] as Map<String, double>;
@@ -48,6 +48,10 @@ class ResultScreen extends StatelessWidget {
 
               // Elements Analysis Card
               _buildElementsAnalysisCard(apiResponse),
+              const SizedBox(height: 16),
+
+              // Nutrient Ratios Card
+              _buildNutrientRatiosCard(apiResponse),
               const SizedBox(height: 16),
 
               // Summary Card (Cost, EC, etc.)
@@ -108,7 +112,10 @@ class ResultScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildInfoRow('Resep', recipe?.name ?? 'Unknown'),
-            _buildInfoRow('Volume', '${volume.toStringAsFixed(1)} Liter'),
+            _buildInfoRow(
+              'Volume(L)',
+              '${volume.toStringAsFixed(1)} A - ${volume.toStringAsFixed(1)} B',
+            ),
             _buildInfoRow(
               'Konsentrasi',
               '${concentration.toStringAsFixed(0)}x',
@@ -211,16 +218,6 @@ class ResultScreen extends StatelessWidget {
                       textAlign: TextAlign.end,
                     ),
                   ),
-                  // Expanded(
-                  //   child: Text(
-                  //     'Biaya',
-                  //     style: TextStyle(
-                  //       fontWeight: FontWeight.w600,
-                  //       fontSize: 12,
-                  //     ),
-                  //     textAlign: TextAlign.right,
-                  //   ),
-                  // ),
                 ],
               ),
             ),
@@ -424,13 +421,7 @@ class ResultScreen extends StatelessWidget {
             ),
 
             // Element rows
-            ...elements
-            // .where(
-            //   (element) =>
-            //       // element['result_ppm'] != null &&
-            //       // element['result_ppm'] > 0,
-            // // )
-            .map((element) => _buildElementRow(element)),
+            ...elements.map((element) => _buildElementRow(element)),
           ],
         ),
       ),
@@ -489,6 +480,155 @@ class ResultScreen extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNutrientRatiosCard(Map<String, dynamic>? apiResponse) {
+    if (apiResponse == null || apiResponse['data'] == null) {
+      return const SizedBox.shrink();
+    }
+
+    final data = apiResponse['data'];
+    final elements = List<Map<String, dynamic>>.from(data['elements'] ?? []);
+    print("Elements: $elements");
+
+    // Get macro nutrient values
+    final macroElements = _getMacroNutrients(elements);
+    final ratios = _calculateRatios(macroElements);
+
+    // if (ratios.isEmpty) {
+    //   return const SizedBox.shrink();
+    // }
+
+    return Card(
+      elevation: 2,
+      color: AppColors.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.compare_arrows,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Rasio Nutrisi Makro',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.mainText,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 2.5,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: ratios.length,
+              itemBuilder: (context, index) {
+                print("Ratios: $ratios");
+                final ratio = ratios.entries.elementAt(index);
+                return _buildRatioCard(ratio.key, ratio.value);
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            // Additional info
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.green, size: 16),
+                      SizedBox(width: 8),
+                      Text(
+                        'Rasio berdasarkan PPM',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Rasio dihitung berdasarkan konsentrasi hasil (PPM) untuk nutrisi makro: N, P, K, Ca, Mg, S',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.green[800],
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRatioCard(String ratio, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            ratio,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.mainText,
             ),
           ),
         ],
@@ -569,7 +709,7 @@ class ResultScreen extends StatelessWidget {
             _buildSummaryItem(
               icon: Icons.water_drop,
               title: 'Volume Larutan',
-              value: '${volumeLiters.toStringAsFixed(1)} Liter',
+              value: '${(volumeLiters * 2).toStringAsFixed(0)} Liter',
               color: Colors.cyan,
               fullWidth: true,
             ),
@@ -813,5 +953,71 @@ class ResultScreen extends StatelessWidget {
       0.0,
       (sum, substance) => sum + (substance['amount_g'] ?? 0.0).toDouble(),
     );
+  }
+
+  Map<String, double> _getMacroNutrients(List<Map<String, dynamic>> elements) {
+    Map<String, double> macroNutrients = {};
+
+    for (var element in elements) {
+      final elementName = element['element']?.toString().toUpperCase() ?? '';
+      final resultPpm = (element['result_ppm'] ?? 0.0).toDouble();
+
+      if (resultPpm <= 0) continue;
+
+      // Handle nitrogen forms - combine NO3- and NH4+
+      if (elementName.contains('N (NO3-)') ||
+          elementName.contains('N (NH4+)')) {
+        macroNutrients['N'] = (macroNutrients['N'] ?? 0.0) + resultPpm;
+      }
+      // Handle other macro nutrients
+      else if (elementName == 'P') {
+        macroNutrients['P'] = resultPpm;
+      } else if (elementName == 'K') {
+        macroNutrients['K'] = resultPpm;
+      } else if (elementName == 'CA') {
+        macroNutrients['Ca'] = resultPpm;
+      } else if (elementName == 'MG') {
+        macroNutrients['Mg'] = resultPpm;
+      } else if (elementName == 'S') {
+        macroNutrients['S'] = resultPpm;
+      }
+    }
+
+    print("Extracted macro nutrients: $macroNutrients"); // Debug
+    return macroNutrients;
+  }
+
+  Map<String, String> _calculateRatios(Map<String, double> macroNutrients) {
+    Map<String, String> ratios = {};
+
+    print("Calculating ratios from: $macroNutrients"); // Debug
+
+    // Get N value as base for ratios
+    final nValue = macroNutrients['N'];
+    if (nValue == null || nValue <= 0) {
+      print("No valid N value found: $nValue"); // Debug
+      return ratios; // Return empty if no N value
+    }
+
+    print("N value found: $nValue"); // Debug
+
+    // Calculate ratios with N as base (N:X format)
+    final elements = ['P', 'K', 'Ca', 'Mg', 'S'];
+
+    for (String element in elements) {
+      final elementValue = macroNutrients[element];
+      if (elementValue != null && elementValue > 0) {
+        final ratio = elementValue / nValue;
+        ratios['N : $element'] = '1 : ${ratio.toStringAsFixed(2)}';
+        print(
+          "Added ratio N:$element = 1:${ratio.toStringAsFixed(2)}",
+        ); // Debug
+      } else {
+        print("Element $element not found or zero: $elementValue"); // Debug
+      }
+    }
+
+    print("Final ratios: $ratios"); // Debug
+    return ratios;
   }
 }
